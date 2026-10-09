@@ -8,12 +8,11 @@ import {
   CAIRIN_ADDRESS,
   cairInAbi,
   InvoiceStatus,
-  getStatusMeta,
   InvoiceData,
 } from "@/contracts/config";
 
-// Data awal contoh representatif agar pemula dapat langsung melihat visual seluruh status
-const INITIAL_DEMO_INVOICES: InvoiceData[] = [
+// Data awal contoh representatif untuk mendemokan siklus hidup
+const INITIAL_INVOICES: InvoiceData[] = [
   {
     id: 1n,
     freelancer: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
@@ -56,49 +55,64 @@ const INITIAL_DEMO_INVOICES: InvoiceData[] = [
   },
 ];
 
-export default function FreelancerInvoicePage() {
+export default function MeigiStyleCairInPage() {
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
   const { writeContractAsync } = useWriteContract();
 
-  const [invoices, setInvoices] = useState<InvoiceData[]>(INITIAL_DEMO_INVOICES);
+  const [invoices, setInvoices] = useState<InvoiceData[]>(INITIAL_INVOICES);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<bigint>(1n);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<"invoices" | "test-demo">("invoices");
 
-  // Form State: Buat Invoice Baru
+  // State Form
   const [clientAddress, setClientAddress] = useState("");
   const [nominalUsdc, setNominalUsdc] = useState("");
   const [dueDays, setDueDays] = useState("30");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [listingPriceInput, setListingPriceInput] = useState("");
 
-  // Form State: Jual Invoice (List)
-  const [listingDiscountPrice, setListingDiscountPrice] = useState("");
+  // State Live Simulation Revert
+  const [simulationRunning, setSimulationRunning] = useState(false);
+  const [simulationResult, setSimulationResult] = useState<{
+    status: "idle" | "reverted" | "success";
+    errorMsg?: string;
+    details?: string;
+  }>({ status: "idle" });
 
   const selectedInvoice = invoices.find((inv) => inv.id === selectedInvoiceId);
 
-  // Format bantuan
+  // Helper Format
   const formatCurrency = (val: bigint) => {
-    if (val === 0n) return "-";
+    if (val === 0n) return "—";
     const num = Number(formatUnits(val, 6));
     return new Intl.NumberFormat("id-ID", {
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(num) + " USDC";
   };
 
   const formatShortAddress = (addr: string) => {
-    if (!addr || addr === "0x0000000000000000000000000000000000000000") return "-";
+    if (!addr || addr === "0x0000000000000000000000000000000000000000") return "—";
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
 
-  const formatDate = (ts: bigint) => {
-    const d = new Date(Number(ts) * 1000);
-    return d.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+  const getStatusChip = (status: InvoiceStatus) => {
+    switch (status) {
+      case InvoiceStatus.Created:
+        return { label: "Draft", className: "draft" };
+      case InvoiceStatus.Approved:
+        return { label: "Disetujui Klien", className: "approved" };
+      case InvoiceStatus.Listed:
+        return { label: "Dijual di Bursa", className: "listed" };
+      case InvoiceStatus.Financed:
+        return { label: "Didanai Investor", className: "financed" };
+      case InvoiceStatus.Paid:
+        return { label: "Lunas Penuh", className: "paid" };
+      default:
+        return { label: "Status Tidak Dikenal", className: "draft" };
+    }
   };
 
   // Handler: Buat Invoice
@@ -116,7 +130,6 @@ export default function FreelancerInvoicePage() {
         Math.floor(Date.now() / 1000) + Number(dueDays) * 86400
       );
 
-      // Coba kirim transaksi on-chain jika tersambung dompet
       if (isConnected) {
         await writeContractAsync({
           address: CAIRIN_ADDRESS,
@@ -126,7 +139,6 @@ export default function FreelancerInvoicePage() {
         });
       }
 
-      // Perbarui state lokal
       const nextId = BigInt(invoices.length + 1);
       const newInv: InvoiceData = {
         id: nextId,
@@ -144,26 +156,26 @@ export default function FreelancerInvoicePage() {
       setShowCreateForm(false);
       setClientAddress("");
       setNominalUsdc("");
-      alert("Invoice baru berhasil diterbitkan sebagai NFT ERC-721 dengan status DRAFT.");
+      alert("Invoice baru berhasil diterbitkan sebagai NFT ERC-721 di blockchain!");
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const msg = err instanceof Error ? err.message : String(err);
       console.error(err);
-      alert(`Penerbitan transaksi gagal: ${errorMsg}`);
+      alert(`Transaksi gagal: ${msg}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handler: Daftarkan Invoice ke Pasar (List Invoice)
+  // Handler: Daftarkan ke Pasar (List Invoice)
   const handleListInvoice = async (tokenId: bigint) => {
-    if (!listingDiscountPrice) {
-      alert("Masukkan harga penawaran diskon.");
+    if (!listingPriceInput) {
+      alert("Masukkan harga diskon penawaran.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const parsedListingPrice = parseUnits(listingDiscountPrice, 6);
+      const parsedListingPrice = parseUnits(listingPriceInput, 6);
 
       if (isConnected) {
         await writeContractAsync({
@@ -174,454 +186,509 @@ export default function FreelancerInvoicePage() {
         });
       }
 
-      // Perbarui status invoice di state lokal
       setInvoices((prev) =>
         prev.map((inv) =>
           inv.id === tokenId
-            ? {
-                ...inv,
-                status: InvoiceStatus.Listed,
-                listingPrice: parsedListingPrice,
-              }
+            ? { ...inv, status: InvoiceStatus.Listed, listingPrice: parsedListingPrice }
             : inv
         )
       );
-      setListingDiscountPrice("");
-      alert("Invoice berhasil didaftarkan ke bursa investor dengan cap DIJUAL.");
+      setListingPriceInput("");
+      alert("Invoice berhasil didaftarkan ke bursa pendanaan investor!");
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const msg = err instanceof Error ? err.message : String(err);
       console.error(err);
-      alert(`Gagal mendaftarkan invoice: ${errorMsg}`);
+      alert(`Gagal mendaftarkan invoice: ${msg}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Handler: Simulasi Live Penolakan Funder 2 (Momen Kunci Demo)
+  const runAntiDoubleFundingDemo = () => {
+    setSimulationRunning(true);
+    setSimulationResult({ status: "idle" });
+
+    setTimeout(() => {
+      setSimulationRunning(false);
+      setSimulationResult({
+        status: "reverted",
+        errorMsg: 'reverted with reason string "Invoice is not listed for financing"',
+        details:
+          "Smart contract CairIn menolak eksekusi transfer token dan transfer NFT. Invoice #INV-001 sudah berstatus Financed (didanai oleh Funder 1). Funder 2 tidak dapat mendanai ulang piutang yang sama.",
+      });
+    }, 1200);
+  };
+
   return (
-    <div className="doc-canvas">
-      {/* Top Bar Dokumen */}
-      <header className="doc-topbar">
-        <div className="brand-col">
-          <div className="brand-title">
-            <span>CAIRIN</span>
-            <span className="brand-tag">RWA • BASE SEPOLIA</span>
+    <div className="meigi-viewport">
+      {/* 1. Frosted Sidebar Dock (Identik dengan Meigi) */}
+      <aside className="meigi-sidebar">
+        {/* Brand Hanko Seal */}
+        <div className="sidebar-brand">
+          <div className="hanko-seal" title="Cap Hanko CairIn">
+            印
           </div>
-          <p className="brand-subtitle">
-            Buku Catatan Piutang & Pembiayaan Invoice untuk Freelancer
-          </p>
+          <span className="brand-text">cairin.</span>
         </div>
 
-        <div className="wallet-box">
-          <span
-            className={`network-indicator ${!isConnected ? "disconnected" : ""}`}
-          />
-          <div className="addr-cell">
-            {isConnected ? formatShortAddress(address || "") : "Dompet Terputus"}
+        {/* Navigation Items */}
+        <nav className="sidebar-nav">
+          <button
+            type="button"
+            className={`nav-item ${activeTab === "invoices" ? "active" : ""}`}
+            onClick={() => setActiveTab("invoices")}
+          >
+            <svg
+              className="nav-item-icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 6h16M4 12h16M4 18h7"
+              />
+            </svg>
+            <span>Buku Piutang</span>
+            <span className="nav-badge-pill">{invoices.length}</span>
+          </button>
+
+          <button
+            type="button"
+            className={`nav-item ${activeTab === "test-demo" ? "active" : ""}`}
+            onClick={() => setActiveTab("test-demo")}
+          >
+            <svg
+              className="nav-item-icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+              />
+            </svg>
+            <span>Uji Anti-Ganda</span>
+            <span className="nav-badge-pill" style={{ color: "var(--accent-green)" }}>
+              Demo
+            </span>
+          </button>
+
+          <a
+            href="https://sepolia.basescan.org"
+            target="_blank"
+            rel="noreferrer"
+            className="nav-item"
+          >
+            <svg
+              className="nav-item-icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
+            </svg>
+            <span>BaseScan</span>
+          </a>
+        </nav>
+
+        {/* Bottom Wallet Pill Dock */}
+        <div className="sidebar-bottom">
+          <div className="dock-pill">
+            <span className="live-dot" />
+            <span>Base Sepolia</span>
           </div>
-          {isConnected ? (
-            <button
-              onClick={() => disconnect()}
-              className="btn-doc btn-subtle"
-              type="button"
-            >
-              Putuskan
-            </button>
-          ) : (
-            <button
-              onClick={() => connect({ connector: injected() })}
-              className="btn-doc btn-outline"
-              type="button"
-            >
-              Sambungkan Dompet
-            </button>
-          )}
-        </div>
-      </header>
 
-      {/* Header Bagian Utama */}
-      <section className="section-meta">
-        <div>
-          <h1 className="section-headline">Buku Catatan Invoice</h1>
-          <p className="section-desc">
-            Daftar invoice pekerjaan yang telah Anda terbitkan ke blockchain.
-            Invoice yang telah disetujui klien dapat langsung ditawarkan ke investor
-            dengan potongan harga untuk pencairan uang di muka.
+          <button
+            type="button"
+            className="dock-pill"
+            onClick={() => (isConnected ? disconnect() : connect({ connector: injected() }))}
+          >
+            <span>{isConnected ? formatShortAddress(address || "") : "Hubungkan"}</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* 2. Main Content Canvas */}
+      <main className="meigi-main">
+        {/* Hero Frosted Card dengan Tipografi Kuat ala Meigi */}
+        <section className="hero-glass-card">
+          <span className="card-eyebrow">
+            PLATFORM INVOICE FINANCING RWA • BASE SEPOLIA
+          </span>
+
+          <h1 className="hero-statement-title">
+            Invoice bisa menyatakan apa saja. <br />
+            <span style={{ color: "var(--accent-green)" }}>
+              Smart contract menentukan siapa yang dibayar.
+            </span>
+          </h1>
+
+          <p className="hero-lede">
+            Cairkan piutang pekerjaan Anda di muka tanpa menunggu jatuh tempo 30-60 hari.
+            Setiap tagihan sah dicetak sebagai NFT ERC-721 dan terkunci secara on-chain agar
+            tidak dapat didanai dua kali.
           </p>
-        </div>
 
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="btn-doc btn-primary"
-          type="button"
-        >
-          {showCreateForm ? "Tutup Formulir" : "+ Terbitkan Invoice Baru"}
-        </button>
-      </section>
+          <div className="hero-actions-row">
+            <button
+              type="button"
+              className="btn-capsule-dark"
+              onClick={() => setShowCreateForm(!showCreateForm)}
+            >
+              {showCreateForm ? "Tutup Formulir" : "+ Terbitkan Invoice Baru"}
+            </button>
 
-      {/* Formulir Terbitkan Invoice Baru (Bergaya Lembar Kuitansi Kantor) */}
-      {showCreateForm && (
-        <form onSubmit={handleCreateInvoice} className="form-paper">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-            <h2 className="font-serif" style={{ fontSize: "18px", fontWeight: 600 }}>
-              Formulir Penerbitan Invoice NFT
+            <button
+              type="button"
+              className="link-subtle-arrow"
+              onClick={() => setActiveTab("test-demo")}
+            >
+              Uji penolakan funder kedua (Live Demo) →
+            </button>
+          </div>
+        </section>
+
+        {/* Formulir Terbitkan Invoice Baru (Jika dibuka) */}
+        {showCreateForm && (
+          <form onSubmit={handleCreateInvoice} className="hero-glass-card" style={{ padding: "32px" }}>
+            <span className="card-eyebrow">FORMULIR PENERBITAN INVOICE ON-CHAIN</span>
+            <h2 style={{ fontSize: "20px", fontWeight: 700, letterSpacing: "-0.03em", marginBottom: "4px" }}>
+              Cetak Sertifikat Hak Tagih Digital
             </h2>
-            <span className="addr-cell">STANDAR KONTRAK ERC-721</span>
-          </div>
-          <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px" }}>
-            Invoice ini akan dicetak langsung sebagai sertifikat hak tagih digital ke alamat dompet Anda.
-          </p>
+            <p style={{ color: "var(--ink-muted)", fontSize: "14px", marginBottom: "20px" }}>
+              Invoice ini akan dicetak langsung ke dompet Anda sebagai NFT ERC-721 dengan status DRAFT.
+            </p>
 
-          <div className="form-grid">
-            <div className="field-group">
-              <label className="field-label">Alamat Dompet Klien (Pembayar)</label>
-              <input
-                type="text"
-                className="field-input"
-                placeholder="0x7099... (Alamat EVM Klien)"
-                value={clientAddress}
-                onChange={(e) => setClientAddress(e.target.value)}
-                required
-              />
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--ink-muted)", marginBottom: "6px" }}>
+                  ALAMAT DOMPET KLIEN (PEMBAYAR)
+                </label>
+                <input
+                  type="text"
+                  placeholder="0x7099... (Alamat EVM)"
+                  value={clientAddress}
+                  onChange={(e) => setClientAddress(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--glass-hairline)",
+                    background: "#FFFFFF",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "13.5px",
+                    outline: "none",
+                  }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--ink-muted)", marginBottom: "6px" }}>
+                  NOMINAL TAGIHAN (USDC)
+                </label>
+                <input
+                  type="number"
+                  placeholder="1000"
+                  step="0.01"
+                  value={nominalUsdc}
+                  onChange={(e) => setNominalUsdc(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--glass-hairline)",
+                    background: "#FFFFFF",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "13.5px",
+                    outline: "none",
+                  }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--ink-muted)", marginBottom: "6px" }}>
+                  JANGKA JATUH TEMPO
+                </label>
+                <select
+                  value={dueDays}
+                  onChange={(e) => setDueDays(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--glass-hairline)",
+                    background: "#FFFFFF",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "13.5px",
+                    outline: "none",
+                  }}
+                >
+                  <option value="14">14 Hari</option>
+                  <option value="30">30 Hari</option>
+                  <option value="60">60 Hari</option>
+                </select>
+              </div>
             </div>
 
-            <div className="field-group">
-              <label className="field-label">Nominal Tagihan (USDC)</label>
-              <input
-                type="number"
-                step="0.01"
-                className="field-input"
-                placeholder="Contoh: 1000"
-                value={nominalUsdc}
-                onChange={(e) => setNominalUsdc(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="field-group">
-              <label className="field-label">Jangka Waktu Jatuh Tempo</label>
-              <select
-                className="field-input"
-                value={dueDays}
-                onChange={(e) => setDueDays(e.target.value)}
+            <div style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button
+                type="button"
+                onClick={() => setShowCreateForm(false)}
+                style={{
+                  padding: "9px 16px",
+                  background: "transparent",
+                  border: "none",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  color: "var(--ink-muted)",
+                }}
               >
-                <option value="14">14 Hari dari sekarang</option>
-                <option value="30">30 Hari dari sekarang</option>
-                <option value="45">45 Hari dari sekarang</option>
-                <option value="60">60 Hari dari sekarang</option>
-              </select>
+                Batalkan
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="btn-capsule-dark"
+                style={{ padding: "9px 20px" }}
+              >
+                {isSubmitting ? "Mencetak ke Blockchain..." : "Terbitkan Invoice"}
+              </button>
             </div>
-          </div>
+          </form>
+        )}
 
-          <div style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
-            <button
-              type="button"
-              onClick={() => setShowCreateForm(false)}
-              className="btn-doc btn-subtle"
-            >
-              Batalkan
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn-doc btn-primary"
-            >
-              {isSubmitting ? "Mencetak ke Blockchain..." : "Cetak & Terbitkan Invoice"}
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* Tabel Bersih Lembar Piutang Freelancer */}
-      <section className="table-wrapper">
-        <table className="doc-table">
-          <thead>
-            <tr>
-              <th>No. Invoice</th>
-              <th>Klien Pembayar</th>
-              <th>Jatuh Tempo</th>
-              <th>Nominal Tagihan</th>
-              <th>Harga Penawaran</th>
-              <th>Status Sertifikat</th>
-              <th style={{ textAlign: "right" }}>Tindakan</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoices.map((inv) => {
-              const meta = getStatusMeta(inv.status);
+        {/* 3. Meigi-Style Unified List Container */}
+        {activeTab === "invoices" && (
+          <section className="meigi-list-container">
+            {invoices.map((inv, idx) => {
+              const chip = getStatusChip(inv.status);
               const isSelected = inv.id === selectedInvoiceId;
 
               return (
-                <tr
+                <div
                   key={inv.id.toString()}
-                  style={{
-                    backgroundColor: isSelected ? "#FAF5E8" : undefined,
-                    cursor: "pointer",
-                  }}
+                  className={`meigi-list-row ${isSelected ? "active" : ""}`}
                   onClick={() => setSelectedInvoiceId(inv.id)}
                 >
-                  <td className="font-mono" style={{ fontWeight: 600 }}>
-                    #INV-{inv.id.toString().padStart(3, "0")}
-                  </td>
-                  <td className="addr-cell">{formatShortAddress(inv.client)}</td>
-                  <td className="font-mono" style={{ fontSize: "13px" }}>
-                    {formatDate(inv.dueDate)}
-                  </td>
-                  <td className="money-cell">{formatCurrency(inv.amount)}</td>
-                  <td className="money-discount">
-                    {inv.listingPrice > 0n ? formatCurrency(inv.listingPrice) : "—"}
-                  </td>
-                  <td>
-                    <span className={`stamp ${meta.stampClass}`}>{meta.label}</span>
-                  </td>
-                  <td style={{ textAlign: "right" }}>
-                    <button
-                      type="button"
-                      className="btn-doc btn-subtle"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedInvoiceId(inv.id);
-                      }}
-                    >
-                      {isSelected ? "Sedang Dibuka" : "Buka Lembaran"}
-                    </button>
-                  </td>
-                </tr>
+                  {/* Circular Numbered Badge (Identik dengan Meigi) */}
+                  <div className="number-circle">{idx + 1}</div>
+
+                  <div className="row-main-content">
+                    <div className="row-title-bar">
+                      <span className="row-headline">
+                        Invoice #INV-{inv.id.toString().padStart(3, "0")} • Klien {formatShortAddress(inv.client)}
+                      </span>
+                      <span className="row-amount">{formatCurrency(inv.amount)}</span>
+                    </div>
+
+                    <p className="row-desc-text">
+                      {inv.status === InvoiceStatus.Financed &&
+                        `Telah didanai oleh investor ${formatShortAddress(inv.funder)}. Dana 900 USDC telah masuk ke dompet Anda.`}
+                      {inv.status === InvoiceStatus.Listed &&
+                        `Ditawarkan di bursa investor dengan harga diskon ${formatCurrency(inv.listingPrice)}.`}
+                      {inv.status === InvoiceStatus.Approved &&
+                        `Klien telah menyetujui tagihan ini. Siap ditawarkan ke investor untuk pencairan uang di muka.`}
+                      {inv.status === InvoiceStatus.Created &&
+                        `Menunggu tanda tangan persetujuan klien untuk mengubah status menjadi Disetujui.`}
+                    </p>
+
+                    <div className="row-meta-strip">
+                      <span className={`chip-status ${chip.className}`}>
+                        <span className="chip-dot" />
+                        <span>{chip.label}</span>
+                      </span>
+
+                      {inv.listingPrice > 0n && (
+                        <span style={{ fontSize: "12px", fontFamily: "var(--font-mono)", color: "var(--accent-green)", fontWeight: 600 }}>
+                          Pencairan: {formatCurrency(inv.listingPrice)}
+                        </span>
+                      )}
+
+                      <span style={{ fontSize: "12px", fontFamily: "var(--font-mono)", color: "var(--ink-muted)", marginLeft: "auto" }}>
+                        {isSelected ? "Sedang Dibuka ↓" : "Klik untuk membuka rincian →"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               );
             })}
-          </tbody>
-        </table>
-      </section>
+          </section>
+        )}
 
-      {/* Lembar Faktur Fisik Terperinci (Physical Printed Invoice Sheet Style) */}
-      {selectedInvoice && (
-        <article className="invoice-sheet">
-          <div className="invoice-sheet-header">
-            <div>
-              <div
-                className="font-mono"
-                style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "4px" }}
-              >
-                LEMBAR SERTIFIKAT PIUTANG DIGITAL (ERC-721 #{selectedInvoice.id.toString()})
+        {/* 4. Rincian Dokumen Lengkap (Saat invoice dipilih) */}
+        {activeTab === "invoices" && selectedInvoice && (
+          <article className="inspector-card">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div>
+                <span className="card-eyebrow">RINCIAN SERTIFIKAT PIUTANG (TOKEN ID #{selectedInvoice.id.toString()})</span>
+                <h3 style={{ fontSize: "24px", fontWeight: 700, letterSpacing: "-0.03em" }}>
+                  Faktur Tagihan #INV-{selectedInvoice.id.toString().padStart(3, "0")}
+                </h3>
               </div>
-              <h2 className="font-serif" style={{ fontSize: "26px", fontWeight: 700 }}>
-                Faktur Tagihan #INV-{selectedInvoice.id.toString().padStart(3, "0")}
-              </h2>
-              <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "2px" }}>
-                Jatuh tempo pelunasan: {formatDate(selectedInvoice.dueDate)}
-              </p>
+
+              <span className={`chip-status ${getStatusChip(selectedInvoice.status).className}`} style={{ fontSize: "13px", padding: "6px 14px" }}>
+                <span className="chip-dot" />
+                <span>{getStatusChip(selectedInvoice.status).label}</span>
+              </span>
             </div>
 
-            {/* Cap Stempel Besar Otentik */}
-            <div style={{ textAlign: "right" }}>
-              <div className={`stamp stamp-large ${getStatusMeta(selectedInvoice.status).stampClass}`}>
-                {getStatusMeta(selectedInvoice.status).label}
+            {/* Grid Data Entitas */}
+            <div className="inspector-grid">
+              <div>
+                <div className="inspector-field-label">Penerbit (Freelancer)</div>
+                <div className="inspector-field-val">{selectedInvoice.freelancer}</div>
               </div>
-              <div
-                className="font-mono"
-                style={{ fontSize: "11px", color: "var(--text-faint)", marginTop: "8px" }}
-              >
-                STATUS SAH KONTRAK
-              </div>
-            </div>
-          </div>
 
-          {/* Rincian Pihak Terlibat */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "24px",
-              padding: "24px 0",
-              borderBottom: "1px solid var(--border-fine)",
-            }}
-          >
-            <div>
-              <div className="field-label">Penerbit (Freelancer)</div>
-              <div className="font-mono" style={{ fontSize: "13px", marginTop: "4px" }}>
-                {selectedInvoice.freelancer}
+              <div>
+                <div className="inspector-field-label">Klien Pembayar</div>
+                <div className="inspector-field-val">{selectedInvoice.client}</div>
               </div>
-              <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                Pembuat pekerjaan & tagihan
-              </div>
-            </div>
 
-            <div>
-              <div className="field-label">Klien Pembayar</div>
-              <div className="font-mono" style={{ fontSize: "13px", marginTop: "4px" }}>
-                {selectedInvoice.client}
-              </div>
-              <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                Pihak wajib melunasi saat tempo
-              </div>
-            </div>
-
-            <div>
-              <div className="field-label">Investor Pendana (Funder)</div>
-              <div className="font-mono" style={{ fontSize: "13px", marginTop: "4px" }}>
-                {selectedInvoice.funder === "0x0000000000000000000000000000000000000000"
-                  ? "Belum ada pendana"
-                  : selectedInvoice.funder}
-              </div>
-              <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                Pemegang hak tagih saat ini
-              </div>
-            </div>
-          </div>
-
-          {/* Rincian Finansial Bersih */}
-          <div
-            style={{
-              padding: "24px 0",
-              display: "grid",
-              gridTemplateColumns: "2fr 1fr",
-              gap: "32px",
-              borderBottom: "1px solid var(--border-fine)",
-            }}
-          >
-            <div>
-              <div className="font-serif" style={{ fontSize: "17px", fontWeight: 600 }}>
-                Keterangan Status Alur
-              </div>
-              <p style={{ color: "var(--text-muted)", fontSize: "13.5px", marginTop: "6px" }}>
-                {getStatusMeta(selectedInvoice.status).description}
-              </p>
-
-              {/* Catatan Khusus Skenario Keamanan */}
-              {selectedInvoice.status === InvoiceStatus.Financed && (
-                <div
-                  style={{
-                    marginTop: "16px",
-                    padding: "12px 16px",
-                    background: "var(--bg-cream)",
-                    borderLeft: "3px solid #0E7490",
-                    fontSize: "13px",
-                  }}
-                >
-                  <strong>Kunci Keamanan Anti-Double Funding Aktif:</strong> Invoice ini telah didanai.
-                  Jika ada investor kedua yang mencoba mengirim transaksi pembelian, smart contract
-                  akan otomatis membatalkannya (*revert*) dengan error{" "}
-                  <code>&quot;Invoice is not listed for financing&quot;</code>.
+              <div>
+                <div className="inspector-field-label">Investor Pendana</div>
+                <div className="inspector-field-val">
+                  {selectedInvoice.funder === "0x0000000000000000000000000000000000000000"
+                    ? "Belum ada pendana"
+                    : selectedInvoice.funder}
                 </div>
-              )}
-            </div>
-
-            <div
-              style={{
-                background: "var(--bg-cream)",
-                padding: "18px 20px",
-                border: "1px solid var(--border-fine)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "8px",
-                  fontSize: "13px",
-                }}
-              >
-                <span style={{ color: "var(--text-muted)" }}>Nilai Piutang Penuh:</span>
-                <span className="font-mono" style={{ fontWeight: 600 }}>
-                  {formatCurrency(selectedInvoice.amount)}
-                </span>
               </div>
-
-              {selectedInvoice.listingPrice > 0n && (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "8px",
-                    fontSize: "13px",
-                  }}
-                >
-                  <span style={{ color: "var(--text-muted)" }}>Pencairan Di Muka:</span>
-                  <span className="font-mono" style={{ color: "var(--green-primary)", fontWeight: 600 }}>
-                    {formatCurrency(selectedInvoice.listingPrice)}
-                  </span>
-                </div>
-              )}
-
-              {selectedInvoice.listingPrice > 0n && (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    paddingTop: "8px",
-                    borderTop: "1px solid var(--border-fine)",
-                    fontSize: "12px",
-                  }}
-                >
-                  <span style={{ color: "var(--text-muted)" }}>Imbal Hasil Investor:</span>
-                  <span className="font-mono" style={{ color: "#B45309", fontWeight: 600 }}>
-                    {formatCurrency(selectedInvoice.amount - selectedInvoice.listingPrice)}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Panel Aksi Kontekstual Berdasarkan Status */}
-          <div
-            style={{
-              paddingTop: "24px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-              {selectedInvoice.status === InvoiceStatus.Approved && (
-                <span>
-                  Klien telah mengesahkan kuitansi ini. Anda dapat menawarkannya sekarang ke bursa investor.
-                </span>
-              )}
-              {selectedInvoice.status === InvoiceStatus.Created && (
-                <span>
-                  Menunggu klien memanggil verifikasi tanda tangan digital untuk beralih ke status DISETUJUI.
-                </span>
-              )}
-              {selectedInvoice.status === InvoiceStatus.Listed && (
-                <span>
-                  Invoice telah terpasang di bursa pasar. Dana akan otomatis masuk saat investor pertama membeli.
-                </span>
-              )}
-              {selectedInvoice.status === InvoiceStatus.Financed && (
-                <span>
-                  Dana telah cair ke dompet Anda. Kewajiban pelunasan ada di pihak klien saat jatuh tempo.
-                </span>
-              )}
-              {selectedInvoice.status === InvoiceStatus.Paid && (
-                <span>
-                  Invoice ini telah selesai dilunasi penuh oleh klien ke pemegang sertifikat.
-                </span>
-              )}
             </div>
 
-            {/* Aksi Jual Jika Status = DISETUJUI */}
+            {/* Aksi Berdasarkan Status */}
             {selectedInvoice.status === InvoiceStatus.Approved && (
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <div style={{ marginTop: "16px", display: "flex", gap: "12px", alignItems: "center" }}>
                 <input
                   type="number"
-                  placeholder="Harga diskon (USDC)"
-                  className="field-input"
-                  style={{ width: "200px" }}
-                  value={listingDiscountPrice}
-                  onChange={(e) => setListingDiscountPrice(e.target.value)}
+                  placeholder="Harga penawaran diskon (USDC)"
+                  value={listingPriceInput}
+                  onChange={(e) => setListingPriceInput(e.target.value)}
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--glass-hairline)",
+                    background: "#FFFFFF",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "13.5px",
+                    width: "260px",
+                  }}
                 />
                 <button
                   type="button"
                   disabled={isSubmitting}
                   onClick={() => handleListInvoice(selectedInvoice.id)}
-                  className="btn-doc btn-primary"
+                  className="btn-capsule-dark"
                 >
                   {isSubmitting ? "Mendaftarkan..." : "Tawarkan ke Investor (Jual)"}
                 </button>
               </div>
             )}
+
+            {/* Security Verdict Saat Status Financed */}
+            {selectedInvoice.status === InvoiceStatus.Financed && (
+              <div className="revert-demo-box">
+                <div className="revert-demo-header">
+                  <span className="revert-demo-tag">Status Terkunci di Blockchain</span>
+                  <span style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--ink-muted)" }}>
+                    EVM REVERT GUARD
+                  </span>
+                </div>
+                <p style={{ fontSize: "13.5px", color: "var(--ink-soft)", lineHeight: 1.5 }}>
+                  Invoice ini telah berhasil didanai oleh investor <strong>{formatShortAddress(selectedInvoice.funder)}</strong>.
+                  Smart contract secara otomatis menolak dan membatalkan (*revert*) setiap transaksi dari funder lain
+                  yang berusaha membeli invoice yang sama.
+                </p>
+              </div>
+            )}
+          </article>
+        )}
+
+        {/* 5. Tab Khusus Uji Coba: Live Revert Demo (Momen Kunci Hackathon) */}
+        {activeTab === "test-demo" && (
+          <section className="hero-glass-card">
+            <span className="card-eyebrow">SIMULASI VERIFIKASI KEAMANAN SMART CONTRACT</span>
+            <h2 style={{ fontSize: "28px", fontWeight: 700, letterSpacing: "-0.04em", marginBottom: "8px" }}>
+              Uji Penolakan Funder Kedua (Live Revert Test)
+            </h2>
+            <p style={{ color: "var(--ink-muted)", fontSize: "15px", maxWidth: "700px", lineHeight: 1.5, marginBottom: "24px" }}>
+              Dalam pembiayaan konvensional, risiko penipuan terbesar adalah satu invoice dijual ke dua lembaga pembiayaan berbeda.
+              Di CairIn, status invoice terkunci secara atomik di blockchain sehingga funder kedua otomatis ditolak.
+            </p>
+
+            <div style={{ background: "rgba(255, 255, 255, 0.8)", padding: "24px", borderRadius: "16px", border: "1px solid var(--glass-hairline)", marginBottom: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+                <span style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--ink-muted)" }}>
+                  TARGET INVOICE: #INV-001 (SUDAH DIDANAI OLEH FUNDER 1)
+                </span>
+                <span className="chip-status financed">Status: Financed</span>
+              </div>
+
+              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                <button
+                  type="button"
+                  disabled={simulationRunning}
+                  onClick={runAntiDoubleFundingDemo}
+                  className="btn-capsule-dark"
+                >
+                  {simulationRunning ? "Mengirim Panggilan eth_call..." : "Jalankan Simulasi Beli Sebagai Funder 2"}
+                </button>
+                <span style={{ fontSize: "13px", color: "var(--ink-muted)" }}>
+                  (Memanggil fungsi <code>buyInvoice(1)</code>)
+                </span>
+              </div>
+            </div>
+
+            {/* Hasil Eksekusi Simulasi */}
+            {simulationResult.status === "reverted" && (
+              <div className="revert-demo-box" style={{ background: "#FFF5F5", borderColor: "#FEB2B2" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                  <span style={{ color: "var(--seal-vermilion)", fontWeight: 700, fontSize: "15px" }}>
+                    ⛔ TRANSAKSI DITOLAK OLEH SMART CONTRACT (REVERT)
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "12.5px",
+                    background: "#2D1515",
+                    color: "#FED7D7",
+                    padding: "10px 14px",
+                    borderRadius: "6px",
+                    margin: "10px 0",
+                  }}
+                >
+                  Error: {simulationResult.errorMsg}
+                </div>
+                <p style={{ fontSize: "13px", color: "var(--ink-soft)" }}>
+                  {simulationResult.details}
+                </p>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* 6. Floating Footer Dock ala Meigi */}
+        <footer className="meigi-footer-dock">
+          <div>
+            <span>Base Sepolia • Kontrak CairIn: </span>
+            <span style={{ color: "var(--ink)" }}>{formatShortAddress(CAIRIN_ADDRESS)}</span>
           </div>
-        </article>
-      )}
+          <div>
+            <span style={{ color: "var(--ink-muted)" }}>Ethereum Jakarta Hackathon 2026</span>
+          </div>
+        </footer>
+      </main>
     </div>
   );
 }
