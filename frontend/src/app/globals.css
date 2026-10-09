@@ -1049,6 +1049,35 @@ nav.header-nav a:hover, nav.header-nav a.active {
   align-items: center;
 }
 
+/* CTA Banner Section on Landing Page */
+.cta-banner {
+  background: var(--cairin-acid);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-brutal);
+  padding: 54px 48px;
+  margin-block: 60px 70px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+}
+
+.cta-banner h2 {
+  font-size: clamp(28px, 3.5vw, 44px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 12px;
+  color: var(--ink);
+}
+
+.cta-banner p {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #383632;
+  max-width: 580px;
+}
+
 /* Footer */
 footer.wrap {
   padding-block: 48px;
@@ -1063,8 +1092,10 @@ footer.wrap {
 }
 
 @media (max-width: 860px) {
-  .hero-stage, .battle-grid, .security-explainer-card {
+  .hero-stage, .battle-grid, .security-explainer-card, .cta-banner {
     grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: flex-start;
   }
   .steps-grid, .benefits-grid {
     grid-template-columns: 1fr;
@@ -1083,4 +1114,5 @@ footer.wrap {
     display: none;
   }
 }
+
 
