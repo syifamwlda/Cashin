@@ -877,6 +877,178 @@ nav.header-nav a:hover, nav.header-nav a.active {
   margin-bottom: 16px;
 }
 
+/* Informational Sections: How It Works & Benefits */
+.info-section {
+  padding-block: 70px 80px;
+  border-top: 2px solid var(--ink);
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 36px;
+}
+
+.step-card {
+  background: var(--paper-card);
+  border: 2px solid var(--ink);
+  padding: 32px 28px;
+  box-shadow: var(--shadow-brutal);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.step-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+.step-number {
+  font-family: var(--mono);
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--cairin-orange);
+  line-height: 1;
+}
+
+.step-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+
+.step-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #444;
+}
+
+/* Benefits Grid (Untuk Freelancer, Investor, Klien) */
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 36px;
+}
+
+.benefit-card {
+  background: var(--paper-white);
+  border: 2px solid var(--ink);
+  padding: 32px 28px;
+  box-shadow: var(--shadow-brutal);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.benefit-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border: 1.5px solid var(--ink);
+  width: max-content;
+}
+
+.benefit-badge.freelancer {
+  background: var(--cairin-acid);
+  color: var(--ink);
+}
+
+.benefit-badge.investor {
+  background: var(--cairin-mint);
+  color: var(--cairin-green);
+}
+
+.benefit-badge.klien {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+.benefit-points {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #333;
+}
+
+.benefit-points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.benefit-points li::before {
+  content: '✓';
+  font-weight: 900;
+  color: var(--cairin-emerald);
+}
+
+/* FAQ Section Accordion */
+.faq-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 860px;
+  margin-top: 32px;
+}
+
+.faq-item {
+  background: var(--paper-white);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-brutal-sm);
+  overflow: hidden;
+  transition: all 0.15s;
+}
+
+.faq-question {
+  padding: 20px 24px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: var(--sans);
+  color: var(--ink);
+}
+
+.faq-answer {
+  padding: 0 24px 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4a473f;
+  border-top: 1px dashed var(--line);
+  padding-top: 16px;
+}
+
+/* Security Explainer Card */
+.security-explainer-card {
+  background: var(--paper-white);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-brutal);
+  padding: 32px;
+  margin-top: 36px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 36px;
+  align-items: center;
+}
+
 /* Footer */
 footer.wrap {
   padding-block: 48px;
@@ -891,7 +1063,10 @@ footer.wrap {
 }
 
 @media (max-width: 860px) {
-  .hero-stage, .battle-grid {
+  .hero-stage, .battle-grid, .security-explainer-card {
+    grid-template-columns: 1fr;
+  }
+  .steps-grid, .benefits-grid {
     grid-template-columns: 1fr;
   }
   .stats-metric-strip {
@@ -908,3 +1083,4 @@ footer.wrap {
     display: none;
   }
 }
+

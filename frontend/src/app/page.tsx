@@ -78,6 +78,9 @@ export default function CairInApp() {
   const [voucherMode, setVoucherMode] = useState<"voucher" | "calculator">("voucher");
   const [liveDiscountPct, setLiveDiscountPct] = useState<number>(8);
 
+  // FAQ Accordion State (open indexes)
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+
   // Form State
   const [jobTitleInput, setJobTitleInput] = useState("");
   const [clientAddress, setClientAddress] = useState("");
@@ -85,10 +88,10 @@ export default function CairInApp() {
   const [dueDays, setDueDays] = useState("30");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Drawer listing price input
+  // Drawer listing price discount
   const [drawerDiscountPct, setDrawerDiscountPct] = useState<number>(8);
 
-  // Revert Demo State (Battle Test)
+  // Security Simulation State
   const [isTestingRevert, setIsTestingRevert] = useState(false);
   const [revertState, setRevertState] = useState<"idle" | "testing" | "reverted">("idle");
   const [revertStep, setRevertStep] = useState<number>(0);
@@ -239,13 +242,13 @@ export default function CairInApp() {
     );
   };
 
-  // Handler: Funder Mendanai Invoice
+  // Handler: Investor Mendanai Invoice
   const handleFundInvoice = (id: bigint) => {
-    const defaultFunder = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC";
+    const defaultInvestor = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC";
     setInvoices((prev) =>
       prev.map((inv) =>
         inv.id === id
-          ? { ...inv, status: InvoiceStatus.Financed, funder: defaultFunder }
+          ? { ...inv, status: InvoiceStatus.Financed, funder: defaultInvestor }
           : inv
       )
     );
@@ -260,8 +263,8 @@ export default function CairInApp() {
     );
   };
 
-  // Live Revert Battle Test Simulator
-  const runBattleTest = () => {
+  // Live Revert Battle Test Simulator (Edukasi Proteksi Anti-Ganda)
+  const runSecurityDemo = () => {
     setIsTestingRevert(true);
     setRevertState("testing");
     setRevertStep(1);
@@ -296,7 +299,7 @@ export default function CairInApp() {
 
   return (
     <>
-      {/* 1. Header Tap-Pay Style CairIn */}
+      {/* 1. Top Navigation Bar */}
       <header className="site-header wrap">
         <a className="brand-badge" href="/" aria-label="CairIn">
           <span className="brand-circle">C</span>
@@ -304,16 +307,11 @@ export default function CairInApp() {
         </a>
 
         <nav className="header-nav">
-          <a href="#hero-slip">Voucher RWA</a>
+          <a href="#cara-kerja">Cara Kerja</a>
+          <a href="#manfaat">Manfaat</a>
           <a href="#buku-piutang">Buku Piutang</a>
-          <a href="#battle-test">Uji Anti-Ganda</a>
-          <a
-            href="https://github.com/syifamwlda/Cashin"
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub
-          </a>
+          <a href="#keamanan">Keamanan</a>
+          <a href="#faq">FAQ</a>
         </nav>
 
         {isConnected ? (
@@ -338,7 +336,7 @@ export default function CairInApp() {
       </header>
 
       <main>
-        {/* 2. Hero Section dengan Living Interactive Physical Voucher Slip */}
+        {/* 2. Hero Section: Value Proposition & Interactive Voucher Slip */}
         <section className="hero-stage wrap" id="hero-slip">
           <div>
             <div className="eyebrow-tag">
@@ -347,13 +345,13 @@ export default function CairInApp() {
             </div>
 
             <h1 className="hero-statement">
-              Cairkan Invoice Freelance Lebih Cepat. <em>Piutang Jadi Kas Instan.</em>
+              Cairkan Invoice Freelance Lebih Cepat. <em>Ubah Piutang Jadi Kas Instan.</em>
             </h1>
 
             <p className="hero-description">
-              Freelancer sering menunggu 30–60 hari agar tagihan dibayar. Di CairIn,
-              invoice Anda dicetak menjadi NFT ERC-721 dan didanai investor hari ini juga dengan diskon.
-              Saat jatuh tempo, klien melunasi penuh langsung ke pemegang NFT.
+              Freelancer sering menunggu 30–60 hari agar tagihan dibayar klien. Di CairIn,
+              terbitkan invoice Anda sebagai bukti hak tagih digital (NFT ERC-721), dapatkan pencairan
+              di muka dari investor dengan diskon wajar, dan biarkan klien melunasi saat jatuh tempo.
             </p>
 
             <div className="hero-actions-group">
@@ -366,8 +364,8 @@ export default function CairInApp() {
                 <span aria-hidden="true">&darr;</span>
               </button>
 
-              <a className="btn-brutal btn-outline" href="#battle-test">
-                <span>Uji Penolakan Funder 2</span>
+              <a className="btn-brutal btn-outline" href="#cara-kerja">
+                <span>Pelajari Cara Kerja</span>
                 <span aria-hidden="true">&rarr;</span>
               </a>
             </div>
@@ -381,7 +379,7 @@ export default function CairInApp() {
                 color: "#555",
               }}
             >
-              JARINGAN: BASE SEPOLIA • STANDAR: ERC-721 + MOCK USDC
+              JARINGAN: BASE SEPOLIA • STANDAR: ERC-721 + MOCK USDC • TANPA BUNGA PINJOL
             </div>
           </div>
 
@@ -439,7 +437,7 @@ export default function CairInApp() {
                         <span className="voucher-stamp-badge stamp-financed">DIDANAI</span>
                       )}
                       {selectedInvoice.status === InvoiceStatus.Listed && (
-                        <span className="voucher-stamp-badge stamp-listed">DIJUAL</span>
+                        <span className="voucher-stamp-badge stamp-listed">DI BURSA</span>
                       )}
                       {selectedInvoice.status === InvoiceStatus.Approved && (
                         <span className="voucher-stamp-badge stamp-approved">DISETUJUI</span>
@@ -489,7 +487,7 @@ export default function CairInApp() {
                       </b>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ color: "#666" }}>Margin Keuntungan Funder:</span>
+                      <span style={{ color: "#666" }}>Keuntungan Investor Saat Tempo:</span>
                       <b style={{ color: "var(--cairin-orange)", fontFamily: "var(--mono)" }}>
                         +${liveInvestorMargin.toFixed(0)} USDC
                       </b>
@@ -502,25 +500,25 @@ export default function CairInApp() {
               <div className="voucher-interactive-action">
                 {selectedInvoice.status === InvoiceStatus.Financed && (
                   <div onClick={() => handlePayInvoice(selectedInvoice.id)}>
-                    <b>✅ Didanai Funder 1 ({formatShortAddress(selectedInvoice.funder)})</b>
+                    <b>✅ Sudah Didanai oleh Investor ({formatShortAddress(selectedInvoice.funder)})</b>
                     <small>Klik untuk simulasikan: Klien Lunasi Tagihan</small>
                   </div>
                 )}
                 {selectedInvoice.status === InvoiceStatus.Listed && (
                   <div onClick={() => handleFundInvoice(selectedInvoice.id)}>
-                    <b>👉 Klik: Danai Sekarang ({formatCurrency(selectedInvoice.listingPrice)})</b>
+                    <b>💎 Klik: Danai Sekarang ({formatCurrency(selectedInvoice.listingPrice)})</b>
                     <small>Uang langsung ditransfer ke dompet freelancer</small>
                   </div>
                 )}
                 {selectedInvoice.status === InvoiceStatus.Approved && (
                   <div onClick={() => handleListInvoice(selectedInvoice.id, liveDiscountPct)}>
-                    <b>👉 Klik: Pasang di Bursa Investor</b>
-                    <small>Daftarkan penawaran diskon ke pasar pendanaan</small>
+                    <b>🚀 Klik: Tawarkan ke Bursa Investor</b>
+                    <small>Pasang penawaran diskon agar investor dapat mendanai</small>
                   </div>
                 )}
                 {selectedInvoice.status === InvoiceStatus.Created && (
                   <div onClick={() => handleApproveInvoice(selectedInvoice.id)}>
-                    <b>👉 Klik: Simulasikan Persetujuan Klien</b>
+                    <b>✍️ Klik: Simulasikan Persetujuan Klien</b>
                     <small>Ubah status draf menjadi disetujui sah</small>
                   </div>
                 )}
@@ -578,7 +576,97 @@ export default function CairInApp() {
           </div>
         </section>
 
-        {/* 4. Clickable Interactive Stats Metric Strip */}
+        {/* 4. Bagian Edukasi: Cara Kerja CairIn (3 Langkah Sederhana) */}
+        <section className="wrap info-section" id="cara-kerja">
+          <div className="section-headline-box">
+            <div>
+              <div className="eyebrow-tag">
+                <span className="eyebrow-bar" />
+                <span>ALUR TRANSAKSI</span>
+              </div>
+              <h2 className="section-title">Bagaimana Cara Kerja CairIn?</h2>
+            </div>
+          </div>
+
+          <div className="steps-grid">
+            <div className="step-card">
+              <span className="step-number">01</span>
+              <h3 className="step-title">Terbitkan Invoice Sebagai NFT</h3>
+              <p className="step-desc">
+                Freelancer memasukkan rincian pekerjaan, alamat dompet klien, nominal tagihan, dan tanggal jatuh tempo.
+                Smart contract mencetak token NFT ERC-721 yang merepresentasikan hak tagih sah di blockchain.
+              </p>
+            </div>
+
+            <div className="step-card">
+              <span className="step-number">02</span>
+              <h3 className="step-title">Klien Setujui & Investor Danai</h3>
+              <p className="step-desc">
+                Klien memverifikasi bahwa pekerjaan valid. Freelancer menawarkan diskon wajar (misal 8%) ke bursa.
+                Investor mendanai tagihan, dan uang USDC langsung cair detik itu juga ke dompet freelancer.
+              </p>
+            </div>
+
+            <div className="step-card">
+              <span className="step-number">03</span>
+              <h3 className="step-title">Pelunasan Otomatis Saat Tempo</h3>
+              <p className="step-desc">
+                Saat tanggal jatuh tempo (misal 30 hari), klien melunasi tagihan 100% penuh.
+                Smart contract secara otomatis menyalurkan dana pelunasan kepada investor pemegang NFT. Semua pihak senang!
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* 5. Bagian Manfaat: Untuk Freelancer, Investor, dan Klien */}
+        <section className="wrap info-section" id="manfaat">
+          <div className="section-headline-box">
+            <div>
+              <div className="eyebrow-tag">
+                <span className="eyebrow-bar" />
+                <span>NILAI TAMBAH</span>
+              </div>
+              <h2 className="section-title">Manfaat Bagi Semua Pihak</h2>
+            </div>
+          </div>
+
+          <div className="benefits-grid">
+            <div className="benefit-card">
+              <span className="benefit-badge freelancer">Untuk Freelancer</span>
+              <h3 style={{ fontSize: "19px", fontWeight: 800 }}>Uang Cair Hari Ini</h3>
+              <ul className="benefit-points">
+                <li>Tidak perlu menunggu 30–60 hari untuk gajian.</li>
+                <li>Bukan pinjaman berbunga tinggi atau pinjol.</li>
+                <li>Arus kas operasional bisnis digital tetap sehat.</li>
+                <li>Hak tagih terlindungi secara legal on-chain.</li>
+              </ul>
+            </div>
+
+            <div className="benefit-card">
+              <span className="benefit-badge investor">Untuk Investor</span>
+              <h3 style={{ fontSize: "19px", fontWeight: 800 }}>Imbal Hasil Riil (RWA)</h3>
+              <ul className="benefit-points">
+                <li>Imbal hasil 8% – 15% APY didukung pekerjaan riil.</li>
+                <li>Bukan skema spekulatif, berbasis invoice riil.</li>
+                <li>Likuiditas cepat dan transparan di Base Sepolia.</li>
+                <li>Kepemilikan hak tagih terjamin oleh token NFT.</li>
+              </ul>
+            </div>
+
+            <div className="benefit-card">
+              <span className="benefit-badge klien">Untuk Klien / Perusahaan</span>
+              <h3 style={{ fontSize: "19px", fontWeight: 800 }}>Fleksibel & Terpercaya</h3>
+              <ul className="benefit-points">
+                <li>Tetap membayar sesuai termin jatuh tempo standar.</li>
+                <li>Rekan kerja freelancer tetap termotivasi dan produktif.</li>
+                <li>Bukti pembayaran tercatat rapi di buku besar Web3.</li>
+                <li>Proses pengesahan tagihan mudah dan instan.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* 6. Clickable Interactive Stats Metric Strip */}
         <section className="wrap stats-metric-strip">
           <div
             className={`stat-cell interactive ${filterStatus === "all" ? "active" : ""}`}
@@ -617,20 +705,20 @@ export default function CairInApp() {
           <div
             className="stat-cell interactive"
             onClick={() => {
-              const el = document.getElementById("battle-test");
+              const el = document.getElementById("keamanan");
               el?.scrollIntoView({ behavior: "smooth" });
             }}
-            title="Klik untuk menuju tes keamanan"
+            title="Klik untuk membaca proteksi keamanan"
           >
-            <span className="stat-cell-label">Keamanan Smart Contract</span>
+            <span className="stat-cell-label">Proteksi Keamanan</span>
             <span className="stat-cell-number" style={{ color: "var(--cairin-green)" }}>
               Anti-Ganda
             </span>
-            <span className="stat-cell-note">State machine Base Sepolia (Uji di bawah &darr;)</span>
+            <span className="stat-cell-note">Smart contract guard Base (Baca di bawah &darr;)</span>
           </div>
         </section>
 
-        {/* 5. The Interactive Ledger Workspace */}
+        {/* 7. The Interactive Ledger Workspace */}
         <section className="wrap" id="buku-piutang">
           <div className="section-headline-box">
             <div>
@@ -681,7 +769,7 @@ export default function CairInApp() {
                   className={`filter-pill ${filterStatus === "listed" ? "active" : ""}`}
                   onClick={() => setFilterStatus("listed")}
                 >
-                  Dijual
+                  Di Bursa
                 </button>
                 <button
                   type="button"
@@ -760,7 +848,7 @@ export default function CairInApp() {
                         <span className="voucher-stamp-badge stamp-financed">DIDANAI</span>
                       )}
                       {inv.status === InvoiceStatus.Listed && (
-                        <span className="voucher-stamp-badge stamp-listed">DIJUAL</span>
+                        <span className="voucher-stamp-badge stamp-listed">DI BURSA</span>
                       )}
                       {inv.status === InvoiceStatus.Approved && (
                         <span className="voucher-stamp-badge stamp-approved">DISETUJUI</span>
@@ -828,8 +916,8 @@ export default function CairInApp() {
                     </small>
                     <span style={{ fontFamily: "var(--mono)", fontSize: "13px", fontWeight: 700 }}>
                       {selectedInvoice.funder === "0x0000000000000000000000000000000000000000"
-                        ? "Belum ada pendana (Hak milik Anda)"
-                        : selectedInvoice.funder}
+                        ? "Belum ada pendana (Masih milik freelancer)"
+                        : `Investor (${formatShortAddress(selectedInvoice.funder)})`}
                     </span>
                   </div>
                 </div>
@@ -849,7 +937,7 @@ export default function CairInApp() {
                   )}
                   {selectedInvoice.listingPrice > 0n && (
                     <div>
-                      <span style={{ color: "#666" }}>Margin Keuntungan Funder: </span>
+                      <span style={{ color: "#666" }}>Margin Keuntungan Investor: </span>
                       <b style={{ fontFamily: "var(--mono)", color: "var(--cairin-orange)" }}>
                         {formatCurrency(selectedInvoice.amount - selectedInvoice.listingPrice)}
                       </b>
@@ -858,7 +946,7 @@ export default function CairInApp() {
                 </div>
               </div>
 
-              {/* Panel Aksi Interaktif Sesuai Status Invoice */}
+              {/* Panel Aksi Sesuai Status Invoice */}
               <div className="drawer-actions-col">
                 <span
                   style={{
@@ -868,13 +956,13 @@ export default function CairInApp() {
                     textTransform: "uppercase",
                   }}
                 >
-                  TINDAKAN SIKLUS HIDUP INVOICE
+                  TINDAKAN INVOICE
                 </span>
 
                 {selectedInvoice.status === InvoiceStatus.Created && (
                   <div>
                     <p style={{ fontSize: "13.5px", color: "#555", marginBottom: "14px", lineHeight: 1.5 }}>
-                      Status masih <strong>Draft</strong>. Klien harus memberikan verifikasi tanda tangan agar invoice sah dijual.
+                      Status masih <strong>Draft</strong>. Klien harus menandatangani pengesahan agar invoice sah dijual.
                     </p>
                     <button
                       type="button"
@@ -929,7 +1017,7 @@ export default function CairInApp() {
                       style={{ width: "100%", justifyContent: "center" }}
                       onClick={() => handleFundInvoice(selectedInvoice.id)}
                     >
-                      Danai Sebagai Investor (Funder 1) &rarr;
+                      Danai Sebagai Investor &rarr;
                     </button>
                   </div>
                 )}
@@ -946,23 +1034,16 @@ export default function CairInApp() {
                         lineHeight: 1.5,
                       }}
                     >
-                      🛡️ <strong>Terkunci:</strong> Uang sudah masuk ke freelancer. Invoice ini aman dari pendanaan ganda.
+                      🛡️ <strong>Terkunci:</strong> Dana sudah cair ke freelancer. Hak tagih kini berada di tangan investor hingga jatuh tempo.
                     </div>
                     <button
                       type="button"
                       className="btn-brutal btn-ink"
-                      style={{ width: "100%", justifyContent: "center", marginBottom: "10px" }}
+                      style={{ width: "100%", justifyContent: "center" }}
                       onClick={() => handlePayInvoice(selectedInvoice.id)}
                     >
                       Klien Lunasi Tagihan (Jatuh Tempo) &rarr;
                     </button>
-                    <a
-                      href="#battle-test"
-                      className="btn-brutal btn-outline"
-                      style={{ width: "100%", justifyContent: "center", fontSize: "12px" }}
-                    >
-                      Uji Penolakan Funder 2 &darr;
-                    </a>
                   </div>
                 )}
 
@@ -986,41 +1067,44 @@ export default function CairInApp() {
           </div>
         </section>
 
-        {/* 6. Anti-Double Funding Live Battle Test Section */}
-        <section className="battle-test-section" id="battle-test">
+        {/* 8. Bagian Keamanan: Proteksi Piutang Ganda (Anti-Double Financing) */}
+        <section className="battle-test-section" id="keamanan">
           <div className="wrap battle-grid">
             <div>
               <div className="eyebrow-tag" style={{ color: "var(--paper)" }}>
                 <span className="eyebrow-bar" />
-                <span>KEAMANAN KUNCI RWA • BASE SEPOLIA</span>
+                <span>KEAMANAN SMART CONTRACT • BASE SEPOLIA</span>
               </div>
 
               <h2 className="battle-title">
-                Satu invoice. Mustahil didanai dua kali.
+                Proteksi Piutang Ganda: Mengapa Transaksi di CairIn Mutlak Aman?
               </h2>
 
               <p className="battle-lede">
-                Dalam pembiayaan tagihan konvensional, penipuan terbesar adalah satu invoice yang sama
-                dijual ke beberapa perusahaan keuangan sekaligus.
-                Di CairIn, setiap invoice diikat menjadi NFT ERC-721 dengan state machine yang ketat.
-                Begitu Funder 1 mendanai, status seketika terkunci dan sistem menolak otomatis upaya pendanaan susulan.
+                Pada bisnis anjak piutang konvensional di perbankan tradisional, penipuan terbesar adalah
+                <strong> satu faktur yang sama dijual berulang kali ke beberapa lembaga pembiayaan berbeda</strong>.
+                <br /><br />
+                Di CairIn, setiap tagihan diikat dalam <strong>NFT ERC-721 tunggal</strong> di Base Sepolia.
+                Smart contract menerapkan sistem transisi status yang ketat: begitu seorang investor mendanai,
+                status seketika terkunci permanen. Jika ada pihak mana pun yang mencoba mendanai invoice yang sama,
+                kode smart contract otomatis menggagalkan transaksi (*revert*).
               </p>
 
               <button
                 type="button"
                 className="btn-brutal btn-acid"
-                onClick={runBattleTest}
+                onClick={runSecurityDemo}
                 disabled={isTestingRevert}
                 style={{ width: "max-content" }}
               >
                 <span>
-                  {isTestingRevert ? "Memeriksa State Mesin..." : "⚡ Coba Beli Sebagai Funder 2"}
+                  {isTestingRevert ? "Memeriksa State Mesin..." : "⚡ Coba Simulasi: Bagaimana Sistem Menolak Pendanaan Ganda"}
                 </span>
                 <span aria-hidden="true">&rarr;</span>
               </button>
             </div>
 
-            {/* The Live Revert Verification Card */}
+            {/* The Live Verification Card */}
             <div className="revert-verify-box">
               <div className="revert-verify-head">
                 <span>SIMULASI SMART CONTRACT</span>
@@ -1038,37 +1122,37 @@ export default function CairInApp() {
 
               <div style={{ padding: "18px 0" }}>
                 <b style={{ fontSize: "20px", display: "block", fontWeight: 800 }}>
-                  Target: Invoice #INV-001
+                  Kasus Uji: Invoice #INV-001
                 </b>
                 <span style={{ fontFamily: "var(--mono)", fontSize: "12px", color: "#666" }}>
-                  Status Saat Ini: Financed (Dimiliki Funder 1)
+                  Status Saat Ini: Didanai (NFT dimiliki Investor Sah)
                 </span>
               </div>
 
               <ul className="revert-check-list">
                 <li>
                   <span className="check-dot" />
-                  <span>Funder 1 Mendanai & Mentransfer USDC</span>
-                  <b style={{ color: "var(--cairin-green)" }}>SUKSES</b>
+                  <span>Investor Sah Mendanai Tagihan</span>
+                  <b style={{ color: "var(--cairin-green)" }}>SUKSES & TERKUNCI</b>
                 </li>
 
                 <li>
                   <span className={revertStep >= 1 ? "check-dot" : "check-dot red"} />
-                  <span>Funder 2 Mengirim Transaksi Pembelian</span>
-                  <b>{revertStep >= 1 ? "DIPROSES" : "MENUNGGU"}</b>
+                  <span>Upaya Pihak Lain Mencoba Mendanai Ulang</span>
+                  <b>{revertStep >= 1 ? "TERDETEKSI" : "MENUNGGU"}</b>
                 </li>
 
                 <li>
                   <span className={revertStep >= 2 ? "check-dot red" : "check-dot"} />
-                  <span>Validasi Status: require(status == Listed)</span>
-                  <b>{revertStep >= 2 ? "GAGAL (STATUS = FINANCED)" : "MENUNGGU"}</b>
+                  <span>Validasi Aturan: require(status == Listed)</span>
+                  <b>{revertStep >= 2 ? "DITOLAK KARENA SUDAH DIDANAI" : "MENUNGGU"}</b>
                 </li>
 
                 <li>
                   <span className={revertState === "reverted" ? "check-dot red" : "check-dot"} />
-                  <span>EVM Menolak Transaksi (Revert Gas Refund)</span>
+                  <span>Hasil: Transaksi Batal Otomatis (Revert)</span>
                   <b style={{ color: revertState === "reverted" ? "var(--cairin-red)" : "#666" }}>
-                    {revertState === "reverted" ? "REVERTED" : "MENUNGGU"}
+                    {revertState === "reverted" ? "REVERTED (AMAN)" : "MENUNGGU"}
                   </b>
                 </li>
               </ul>
@@ -1079,9 +1163,88 @@ export default function CairInApp() {
                 }`}
               >
                 {revertState === "reverted"
-                  ? "TRANSAKSI FUNDER 2 DITOLAK: SALDO AMAN 100%"
-                  : "KLIK TOMBOL UNTUK MENJALANKAN UJI COBA SERANGAN"}
+                  ? "TRANSAKSI GANDA DITOLAK: DANA AMAN 100% TANPA RISIKO"
+                  : "KLIK TOMBOL DI SEBELAH KIRI UNTUK MELIHAT SIMULASI"}
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 9. Bagian Tanya Jawab (FAQ / Informasi Lengkap) */}
+        <section className="wrap info-section" id="faq">
+          <div className="section-headline-box">
+            <div>
+              <div className="eyebrow-tag">
+                <span className="eyebrow-bar" />
+                <span>PERTANYAAN UMUM</span>
+              </div>
+              <h2 className="section-title">Semua yang Perlu Anda Ketahui</h2>
+            </div>
+          </div>
+
+          <div className="faq-grid">
+            <div className="faq-item">
+              <button
+                type="button"
+                className="faq-question"
+                onClick={() => setOpenFaq(openFaq === 0 ? null : 0)}
+              >
+                <span>Apakah CairIn merupakan pinjaman berbunga atau pinjol?</span>
+                <span>{openFaq === 0 ? "−" : "+"}</span>
+              </button>
+              {openFaq === 0 && (
+                <div className="faq-answer">
+                  <strong>Sama sekali bukan.</strong> CairIn adalah platform anjak piutang (*invoice factoring*), yaitu jual beli hak tagih dengan potongan diskon yang disepakati di awal. Freelancer tidak memiliki kewajiban mencicil atau membayar bunga bulanan. Kewajiban membayar pelunasan tagihan 100% ada pada klien Anda saat tanggal jatuh tempo.
+                </div>
+              )}
+            </div>
+
+            <div className="faq-item">
+              <button
+                type="button"
+                className="faq-question"
+                onClick={() => setOpenFaq(openFaq === 1 ? null : 1)}
+              >
+                <span>Siapa yang membayar invoice saat tanggal jatuh tempo?</span>
+                <span>{openFaq === 1 ? "−" : "+"}</span>
+              </button>
+              {openFaq === 1 && (
+                <div className="faq-answer">
+                  Klien (pemberi kerja Anda). Klien menyetorkan pelunasan tagihan penuh (100%) ke alamat smart contract CairIn. Smart contract kemudian secara instan menyalurkan dana tersebut kepada investor yang memegang NFT hak tagih Anda.
+                </div>
+              )}
+            </div>
+
+            <div className="faq-item">
+              <button
+                type="button"
+                className="faq-question"
+                onClick={() => setOpenFaq(openFaq === 2 ? null : 2)}
+              >
+                <span>Mengapa platform ini dibangun di jaringan Base Sepolia?</span>
+                <span>{openFaq === 2 ? "−" : "+"}</span>
+              </button>
+              {openFaq === 2 && (
+                <div className="faq-answer">
+                  Base adalah jaringan Ethereum Layer-2 yang didukung oleh Coinbase. Biaya transaksi (gas fee) di Base sangat murah (kurang dari Rp100 per transaksi) dengan kecepatan konfirmasi hanya 1-2 detik, sehingga cocok untuk transaksi invoice mikro bagi pekerja lepas di Indonesia.
+                </div>
+              )}
+            </div>
+
+            <div className="faq-item">
+              <button
+                type="button"
+                className="faq-question"
+                onClick={() => setOpenFaq(openFaq === 3 ? null : 3)}
+              >
+                <span>Bagaimana jika klien belum menyetujui invoice?</span>
+                <span>{openFaq === 3 ? "−" : "+"}</span>
+              </button>
+              {openFaq === 3 && (
+                <div className="faq-answer">
+                  Invoice yang baru dibuat berstatus <code>Draft</code>. Untuk melindungi investor dari tagihan palsu, invoice tidak dapat dipasarkan ke bursa pendanaan sampai klien Anda menandatangani persetujuan secara on-chain bahwa pekerjaan digital tersebut memang sah dan telah diselesaikan.
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -1093,7 +1256,7 @@ export default function CairInApp() {
         <div>ETHEREUM JAKARTA 2026 HACKATHON</div>
       </footer>
 
-      {/* 7. Modal: Terbitkan Invoice Baru */}
+      {/* 10. Modal: Terbitkan Invoice Baru */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal-content-card" onClick={(e) => e.stopPropagation()}>
