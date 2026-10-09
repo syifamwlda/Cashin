@@ -62,44 +62,40 @@ const INITIAL_INVOICES: InvoiceItem[] = [
   },
 ];
 
-export default function CairInCleanApp() {
+export default function CairInApp() {
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
   const { writeContractAsync } = useWriteContract();
 
-  // Invoices & Selection
   const [invoices, setInvoices] = useState<InvoiceItem[]>(INITIAL_INVOICES);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<bigint>(1n);
-  const [activeRole, setActiveRole] = useState<"freelancer" | "investor" | "security">("freelancer");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Interactive Live Calculator state
-  const [calcAmount, setCalcAmount] = useState<number>(1000);
-  const [calcDiscountPct, setCalcDiscountPct] = useState<number>(8);
-
-  // Listing discount slider in inspector
-  const [listingDiscountPct, setListingDiscountPct] = useState<number>(8);
-
-  // Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Voucher interactive tab mode: "voucher" or "calculator"
+  const [voucherMode, setVoucherMode] = useState<"voucher" | "calculator">("voucher");
+  const [liveDiscountPct, setLiveDiscountPct] = useState<number>(8);
+
+  // Form State
   const [jobTitleInput, setJobTitleInput] = useState("");
-  const [clientAddressInput, setClientAddressInput] = useState("");
-  const [amountInput, setAmountInput] = useState("");
-  const [dueDaysInput, setDueDaysInput] = useState("30");
+  const [clientAddress, setClientAddress] = useState("");
+  const [nominalUsdc, setNominalUsdc] = useState("");
+  const [dueDays, setDueDays] = useState("30");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Revert Demo State
-  const [revertRunning, setRevertRunning] = useState(false);
-  const [revertLogs, setRevertLogs] = useState<string[]>([
-    "Siap menguji. Klik tombol di bawah untuk menyimulasikan panggilan ganda dari Funder 2.",
-  ]);
-  const [revertSuccess, setRevertSuccess] = useState<boolean | null>(null);
+  // Drawer listing price input
+  const [drawerDiscountPct, setDrawerDiscountPct] = useState<number>(8);
+
+  // Revert Demo State (Battle Test)
+  const [isTestingRevert, setIsTestingRevert] = useState(false);
+  const [revertState, setRevertState] = useState<"idle" | "testing" | "reverted">("idle");
+  const [revertStep, setRevertStep] = useState<number>(0);
 
   const selectedInvoice = invoices.find((inv) => inv.id === selectedInvoiceId) || invoices[0];
 
-  // Helpers
+  // Helper formats
   const formatCurrency = (val: bigint) => {
     if (val === 0n) return "—";
     const num = Number(formatUnits(val, 6));
@@ -125,7 +121,8 @@ export default function CairInCleanApp() {
 
   // Filtered Invoices
   const filteredInvoices = invoices.filter((inv) => {
-    const matchesSearch = inv.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch =
+      inv.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       inv.id.toString().includes(searchQuery);
 
     if (!matchesSearch) return false;
@@ -138,49 +135,48 @@ export default function CairInCleanApp() {
     return true;
   });
 
-  const listedInvoices = invoices.filter((inv) => inv.status === InvoiceStatus.Listed);
+  // Cycle invoice selector in hero voucher
+  const cycleInvoice = (direction: "prev" | "next") => {
+    const currentIndex = invoices.findIndex((i) => i.id === selectedInvoice.id);
+    if (direction === "prev") {
+      const prevIndex = currentIndex > 0 ? currentIndex - 1 : invoices.length - 1;
+      setSelectedInvoiceId(invoices[prevIndex].id);
+    } else {
+      const nextIndex = currentIndex < invoices.length - 1 ? currentIndex + 1 : 0;
+      setSelectedInvoiceId(invoices[nextIndex].id);
+    }
+  };
 
-  // Calculations for quick metrics
-  const totalAmount = invoices.reduce((acc, curr) => acc + curr.amount, 0n);
-  const totalFinanced = invoices
-    .filter((inv) => inv.status === InvoiceStatus.Financed || inv.status === InvoiceStatus.Paid)
-    .reduce((acc, curr) => acc + curr.listingPrice, 0n);
-  const totalInMarket = invoices
-    .filter((inv) => inv.status === InvoiceStatus.Listed)
-    .reduce((acc, curr) => acc + curr.listingPrice, 0n);
-
-  // Calculator Outputs
-  const calcInstantPayout = calcAmount * (1 - calcDiscountPct / 100);
-  const calcInvestorProfit = calcAmount * (calcDiscountPct / 100);
-
-  // Actions
+  // Handler: Buat Invoice Baru
   const handleCreateInvoice = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientAddressInput || !amountInput) {
-      alert("Harap isi alamat dompet klien dan nominal tagihan.");
+    if (!clientAddress || !nominalUsdc) {
+      alert("Lengkapi alamat klien dan nominal piutang.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const parsedAmount = parseUnits(amountInput, 6);
-      const parsedDueDate = BigInt(Math.floor(Date.now() / 1000) + Number(dueDaysInput) * 86400);
+      const parsedAmount = parseUnits(nominalUsdc, 6);
+      const parsedDueDate = BigInt(
+        Math.floor(Date.now() / 1000) + Number(dueDays) * 86400
+      );
 
       if (isConnected) {
         await writeContractAsync({
           address: CAIRIN_ADDRESS,
           abi: cairInAbi,
           functionName: "createInvoice",
-          args: [clientAddressInput as `0x${string}`, parsedAmount, parsedDueDate],
+          args: [clientAddress as `0x${string}`, parsedAmount, parsedDueDate],
         });
       }
 
       const nextId = BigInt(invoices.length + 1);
       const newInv: InvoiceItem = {
         id: nextId,
-        jobTitle: jobTitleInput || `Tagihan Jasa Digital #${nextId}`,
+        jobTitle: jobTitleInput || `Jasa Pekerjaan Freelance #${nextId}`,
         freelancer: address || "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-        client: clientAddressInput,
+        client: clientAddress,
         amount: parsedAmount,
         listingPrice: 0n,
         dueDate: parsedDueDate,
@@ -192,8 +188,8 @@ export default function CairInCleanApp() {
       setSelectedInvoiceId(nextId);
       setShowCreateModal(false);
       setJobTitleInput("");
-      setClientAddressInput("");
-      setAmountInput("");
+      setClientAddress("");
+      setNominalUsdc("");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(err);
@@ -203,711 +199,909 @@ export default function CairInCleanApp() {
     }
   };
 
+  // Handler: Persetujuan Klien
   const handleApproveInvoice = (id: bigint) => {
     setInvoices((prev) =>
-      prev.map((inv) => (inv.id === id ? { ...inv, status: InvoiceStatus.Approved } : inv))
-    );
-  };
-
-  const handleListInvoice = (id: bigint) => {
-    const inv = invoices.find((i) => i.id === id);
-    if (!inv) return;
-
-    const discountAmount = (Number(formatUnits(inv.amount, 6)) * (100 - listingDiscountPct)) / 100;
-    const parsedListing = parseUnits(discountAmount.toFixed(2), 6);
-
-    setInvoices((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: InvoiceStatus.Listed, listingPrice: parsedListing } : item
+      prev.map((inv) =>
+        inv.id === id ? { ...inv, status: InvoiceStatus.Approved } : inv
       )
     );
   };
 
+  // Handler: Jual Invoice (List)
+  const handleListInvoice = async (id: bigint, discountPct: number) => {
+    const inv = invoices.find((i) => i.id === id);
+    if (!inv) return;
+
+    const discountAmount =
+      (Number(formatUnits(inv.amount, 6)) * (100 - discountPct)) / 100;
+    const parsedListing = parseUnits(discountAmount.toFixed(2), 6);
+
+    if (isConnected) {
+      try {
+        await writeContractAsync({
+          address: CAIRIN_ADDRESS,
+          abi: cairInAbi,
+          functionName: "listInvoice",
+          args: [id, parsedListing],
+        });
+      } catch (err) {
+        console.warn("On-chain fallback to simulated state:", err);
+      }
+    }
+
+    setInvoices((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, status: InvoiceStatus.Listed, listingPrice: parsedListing }
+          : item
+      )
+    );
+  };
+
+  // Handler: Funder Mendanai Invoice
   const handleFundInvoice = (id: bigint) => {
     const defaultFunder = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC";
     setInvoices((prev) =>
       prev.map((inv) =>
-        inv.id === id ? { ...inv, status: InvoiceStatus.Financed, funder: defaultFunder } : inv
+        inv.id === id
+          ? { ...inv, status: InvoiceStatus.Financed, funder: defaultFunder }
+          : inv
       )
     );
   };
 
+  // Handler: Pelunasan Klien
   const handlePayInvoice = (id: bigint) => {
     setInvoices((prev) =>
-      prev.map((inv) => (inv.id === id ? { ...inv, status: InvoiceStatus.Paid } : inv))
+      prev.map((inv) =>
+        inv.id === id ? { ...inv, status: InvoiceStatus.Paid } : inv
+      )
     );
   };
 
-  // Run EVM Revert Simulation
-  const handleTriggerRevertTest = () => {
-    setRevertRunning(true);
-    setRevertSuccess(null);
-    setRevertLogs([
-      "▶ Memulai panggilan RPC ke Base Sepolia Testnet...",
-      "→ Transaksi: cairIn.fundInvoice(1n)",
-      "→ Pengirim (Funder 2): 0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
-      "→ Memeriksa kondisi smart contract...",
-    ]);
+  // Live Revert Battle Test Simulator
+  const runBattleTest = () => {
+    setIsTestingRevert(true);
+    setRevertState("testing");
+    setRevertStep(1);
 
     setTimeout(() => {
-      setRevertLogs((prev) => [
-        ...prev,
-        "⚠️ require(inv.status == InvoiceStatus.Listed) dievaluasi:",
-        "   Status saat ini = InvoiceStatus.Financed (Nilai: 3)",
-        "   Expected = InvoiceStatus.Listed (Nilai: 2)",
-        "🛑 REVERT EXCEPTION: \"Invoice is not listed for financing\"",
-        "✓ State tidak berubah: Transaksi dibatalkan secara atomik.",
-        "✓ Saldo Funder 2 aman 100% (0 USDC terpotong).",
-        "✓ Kepemilikan NFT tetap sah milik Funder 1.",
-      ]);
-      setRevertRunning(false);
-      setRevertSuccess(true);
-    }, 1000);
+      setRevertStep(2);
+    }, 600);
+
+    setTimeout(() => {
+      setRevertStep(3);
+      setIsTestingRevert(false);
+      setRevertState("reverted");
+    }, 1300);
   };
 
-  const prefillFromCalc = () => {
-    setAmountInput(calcAmount.toString());
-    setJobTitleInput(`Proyek Freelance (${calcDiscountPct}% Diskon Cepat)`);
-    setClientAddressInput("0x70997970C51812dc3A010C7d01b50e0d17dc79C8");
-    setShowCreateModal(true);
-  };
+  // Calculations for quick metrics
+  const totalAmount = invoices.reduce((acc, curr) => acc + curr.amount, 0n);
+  const totalFinanced = invoices
+    .filter(
+      (inv) =>
+        inv.status === InvoiceStatus.Financed || inv.status === InvoiceStatus.Paid
+    )
+    .reduce((acc, curr) => acc + curr.listingPrice, 0n);
+  const totalListed = invoices
+    .filter((inv) => inv.status === InvoiceStatus.Listed)
+    .reduce((acc, curr) => acc + curr.listingPrice, 0n);
+
+  // Live Voucher Calculation values
+  const currentInvoiceNominal = Number(formatUnits(selectedInvoice.amount, 6));
+  const livePayoutAmount = (currentInvoiceNominal * (100 - liveDiscountPct)) / 100;
+  const liveInvestorMargin = (currentInvoiceNominal * liveDiscountPct) / 100;
 
   return (
-    <div className="app-container">
-      {/* 1. Header Navigation */}
-      <header className="top-nav">
-        <div className="brand-section">
-          <div className="brand-symbol">C</div>
-          <div className="brand-title-group">
-            <h1>CairIn</h1>
-            <p>Invoice Financing Freelancer • Base Sepolia</p>
-          </div>
-        </div>
+    <>
+      {/* 1. Header Tap-Pay Style CairIn */}
+      <header className="site-header wrap">
+        <a className="brand-badge" href="/" aria-label="CairIn">
+          <span className="brand-circle">C</span>
+          <span>CAIRIN</span>
+        </a>
 
-        {/* Role Switcher */}
-        <div className="role-switcher">
-          <button
-            type="button"
-            className={`role-btn ${activeRole === "freelancer" ? "active" : ""}`}
-            onClick={() => setActiveRole("freelancer")}
+        <nav className="header-nav">
+          <a href="#hero-slip">Voucher RWA</a>
+          <a href="#buku-piutang">Buku Piutang</a>
+          <a href="#battle-test">Uji Anti-Ganda</a>
+          <a
+            href="https://github.com/syifamwlda/Cashin"
+            target="_blank"
+            rel="noreferrer"
           >
-            <span>💼</span>
-            <span>Freelancer</span>
-          </button>
-          <button
-            type="button"
-            className={`role-btn ${activeRole === "investor" ? "active" : ""}`}
-            onClick={() => setActiveRole("investor")}
-          >
-            <span>📈</span>
-            <span>Bursa Investor ({listedInvoices.length})</span>
-          </button>
-          <button
-            type="button"
-            className={`role-btn ${activeRole === "security" ? "active" : ""}`}
-            onClick={() => setActiveRole("security")}
-          >
-            <span>🛡️</span>
-            <span>Uji Anti-Ganda</span>
-          </button>
-        </div>
+            GitHub
+          </a>
+        </nav>
 
-        {/* Action & Wallet Dock */}
-        <div className="top-actions">
+        {isConnected ? (
           <button
             type="button"
-            className="btn-primary-action"
-            onClick={() => setShowCreateModal(true)}
+            className="header-action-btn"
+            onClick={() => disconnect()}
           >
-            <span>+ Buat Invoice</span>
+            <span>{formatShortAddress(address || "")}</span>
+            <small style={{ opacity: 0.8 }}>(Putuskan)</small>
           </button>
-
-          {isConnected ? (
-            <button
-              type="button"
-              className="btn-wallet-connect"
-              onClick={() => disconnect()}
-              title="Klik untuk memutuskan dompet"
-            >
-              <span className="dot-network" />
-              <span>{formatShortAddress(address || "")}</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="btn-wallet-connect"
-              onClick={() => connect({ connector: injected() })}
-            >
-              <span className="dot-network" style={{ background: "#F59E0B" }} />
-              <span>Sambungkan Dompet</span>
-            </button>
-          )}
-        </div>
+        ) : (
+          <button
+            type="button"
+            className="header-action-btn"
+            onClick={() => connect({ connector: injected() })}
+          >
+            <span>Sambungkan Dompet</span>
+            <span aria-hidden="true">&nearr;</span>
+          </button>
+        )}
       </header>
 
-      {/* 2. Interactive Instant Financing Calculator */}
-      <section className="calculator-banner">
-        <div className="calc-header">
-          <div className="calc-title">
-            <h2>Simulasi Pencairan Cepat Hari Ini</h2>
-            <p>Geser nilai tagihan dan diskon untuk melihat dana yang langsung cair ke dompetmu tanpa menunggu tempo.</p>
-          </div>
-          <button
-            type="button"
-            className="btn-primary-action"
-            style={{ padding: "8px 14px", fontSize: "13px" }}
-            onClick={prefillFromCalc}
-          >
-            <span>Pakai Nilai Ini Buat Invoice &rarr;</span>
-          </button>
-        </div>
+      <main>
+        {/* 2. Hero Section dengan Living Interactive Physical Voucher Slip */}
+        <section className="hero-stage wrap" id="hero-slip">
+          <div>
+            <div className="eyebrow-tag">
+              <span className="eyebrow-bar" />
+              <span>BASE SEPOLIA TESTNET • RWA INVOICE FINANCING</span>
+            </div>
 
-        <div className="calc-grid">
-          <div className="calc-controls">
-            <div className="calc-slider-group">
-              <div className="calc-slider-label">
-                <span>Nominal Tagihan Invoice</span>
-                <span>{calcAmount.toLocaleString("id-ID")} USDC</span>
+            <h1 className="hero-statement">
+              Cairkan Invoice Freelance Lebih Cepat. <em>Piutang Jadi Kas Instan.</em>
+            </h1>
+
+            <p className="hero-description">
+              Freelancer sering menunggu 30–60 hari agar tagihan dibayar. Di CairIn,
+              invoice Anda dicetak menjadi NFT ERC-721 dan didanai investor hari ini juga dengan diskon.
+              Saat jatuh tempo, klien melunasi penuh langsung ke pemegang NFT.
+            </p>
+
+            <div className="hero-actions-group">
+              <button
+                type="button"
+                className="btn-brutal btn-acid"
+                onClick={() => setShowCreateModal(true)}
+              >
+                <span>+ Terbitkan Invoice</span>
+                <span aria-hidden="true">&darr;</span>
+              </button>
+
+              <a className="btn-brutal btn-outline" href="#battle-test">
+                <span>Uji Penolakan Funder 2</span>
+                <span aria-hidden="true">&rarr;</span>
+              </a>
+            </div>
+
+            <div
+              style={{
+                marginTop: "28px",
+                fontFamily: "var(--mono)",
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "#555",
+              }}
+            >
+              JARINGAN: BASE SEPOLIA • STANDAR: ERC-721 + MOCK USDC
+            </div>
+          </div>
+
+          {/* Living Interactive Physical Voucher Slip */}
+          <div className="factoring-slip-container">
+            <div className="slip-sun" />
+
+            <div className="interactive-physical-voucher">
+              {/* Top Bar with Status and ID */}
+              <div className="voucher-top-bar">
+                <span>FAKTUR RESMI CAIRIN</span>
+                <span style={{ color: "var(--cairin-green)" }}>
+                  TOKEN #{selectedInvoice.id.toString()}
+                </span>
               </div>
-              <input
-                type="range"
-                min="200"
-                max="5000"
-                step="50"
-                value={calcAmount}
-                onChange={(e) => setCalcAmount(Number(e.target.value))}
-                className="calc-range-input"
-              />
-            </div>
 
-            <div className="calc-slider-group">
-              <div className="calc-slider-label">
-                <span>Tawaran Diskon ke Investor</span>
-                <span>{calcDiscountPct}%</span>
-              </div>
-              <input
-                type="range"
-                min="2"
-                max="20"
-                step="0.5"
-                value={calcDiscountPct}
-                onChange={(e) => setCalcDiscountPct(Number(e.target.value))}
-                className="calc-range-input"
-              />
-            </div>
-          </div>
-
-          <div className="calc-results-card">
-            <div className="calc-result-row highlight">
-              <span>Dana Cair Hari Ini:</span>
-              <b>{calcInstantPayout.toLocaleString("id-ID", { maximumFractionDigits: 1 })} USDC</b>
-            </div>
-            <div className="calc-result-row">
-              <span>Keuntungan Investor (Saat Tempo):</span>
-              <b style={{ color: "var(--orange-main)" }}>
-                +{calcInvestorProfit.toLocaleString("id-ID", { maximumFractionDigits: 1 })} USDC ({calcDiscountPct}%)
-              </b>
-            </div>
-            <div className="calc-result-row">
-              <span>Waktu Tunggu Freelancer:</span>
-              <b style={{ color: "var(--green-main)" }}>0 Hari (Instan)</b>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. Quick Stats Grid */}
-      <section className="quick-stats-grid">
-        <div className="stat-card">
-          <div className="stat-label">Total Nilai Tagihan</div>
-          <div className="stat-value">{formatCurrency(totalAmount)}</div>
-          <div className="stat-subtext">{invoices.length} tagihan terdaftar</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Sudah Cair ke Freelancer</div>
-          <div className="stat-value" style={{ color: "var(--green-text)" }}>
-            {formatCurrency(totalFinanced)}
-          </div>
-          <div className="stat-subtext">Langsung masuk ke rekening Web3</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Tersedia di Bursa Investor</div>
-          <div className="stat-value" style={{ color: "var(--orange-main)" }}>
-            {formatCurrency(totalInMarket)}
-          </div>
-          <div className="stat-subtext">{listedInvoices.length} invoice siap didanai</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Protokol Keamanan</div>
-          <div className="stat-value" style={{ fontSize: "17px", color: "var(--blue-text)" }}>
-            Anti-Ganda Aktif
-          </div>
-          <div className="stat-subtext">ERC-721 State Guard on Base</div>
-        </div>
-      </section>
-
-      {/* 4. Main Workspaces */}
-      {activeRole === "freelancer" && (
-        <div className="workspace-split">
-          {/* Left Master List */}
-          <div className="invoices-master-pane">
-            <div className="pane-header">
-              <span className="pane-title">Buku Piutang Freelancer</span>
-              <div className="pane-filter-tabs">
+              {/* Mode Switcher inside Voucher: Info vs Interactive Calculator */}
+              <div className="voucher-interactive-tabs">
                 <button
                   type="button"
-                  className={`filter-chip ${filterStatus === "all" ? "active" : ""}`}
-                  onClick={() => setFilterStatus("all")}
+                  className={`voucher-tab-btn ${voucherMode === "voucher" ? "active" : ""}`}
+                  onClick={() => setVoucherMode("voucher")}
                 >
-                  Semua
+                  📄 Status Faktur
                 </button>
                 <button
                   type="button"
-                  className={`filter-chip ${filterStatus === "draft" ? "active" : ""}`}
+                  className={`voucher-tab-btn ${voucherMode === "calculator" ? "active" : ""}`}
+                  onClick={() => setVoucherMode("calculator")}
+                >
+                  ⚡ Hitung Pencairan
+                </button>
+              </div>
+
+              {/* Voucher View Mode */}
+              {voucherMode === "voucher" ? (
+                <>
+                  <div className="voucher-amount-section">
+                    <div className="voucher-label">NILAI PIUTANG TAGIHAN</div>
+                    <div className="voucher-amount">
+                      <sup>$</sup>
+                      {Number(formatUnits(selectedInvoice.amount, 6)).toLocaleString("id-ID")}
+                    </div>
+                  </div>
+
+                  {/* Party Details Card */}
+                  <div className="voucher-party-card">
+                    <div className="voucher-avatar">C</div>
+                    <div className="voucher-party-info">
+                      <b>{selectedInvoice.jobTitle}</b>
+                      <small>Klien: {formatShortAddress(selectedInvoice.client)}</small>
+                    </div>
+                    <div>
+                      {selectedInvoice.status === InvoiceStatus.Financed && (
+                        <span className="voucher-stamp-badge stamp-financed">DIDANAI</span>
+                      )}
+                      {selectedInvoice.status === InvoiceStatus.Listed && (
+                        <span className="voucher-stamp-badge stamp-listed">DIJUAL</span>
+                      )}
+                      {selectedInvoice.status === InvoiceStatus.Approved && (
+                        <span className="voucher-stamp-badge stamp-approved">DISETUJUI</span>
+                      )}
+                      {selectedInvoice.status === InvoiceStatus.Created && (
+                        <span className="voucher-stamp-badge stamp-draft">DRAFT</span>
+                      )}
+                      {selectedInvoice.status === InvoiceStatus.Paid && (
+                        <span className="voucher-stamp-badge stamp-financed">LUNAS</span>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* Interactive Calculator Mode inside the Voucher */
+                <div style={{ padding: "12px 0" }}>
+                  <div className="voucher-slider-box">
+                    <div className="voucher-slider-header">
+                      <span>Tawaran Diskon ke Investor:</span>
+                      <b style={{ color: "var(--cairin-orange)" }}>{liveDiscountPct}%</b>
+                    </div>
+                    <input
+                      type="range"
+                      min="2"
+                      max="20"
+                      step="1"
+                      value={liveDiscountPct}
+                      onChange={(e) => setLiveDiscountPct(Number(e.target.value))}
+                      className="voucher-range-input"
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      background: "#FFFFFF",
+                      border: "1.5px solid var(--ink)",
+                      borderRadius: "6px",
+                      padding: "10px 12px",
+                      marginBottom: "12px",
+                      fontSize: "12px",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                      <span style={{ color: "#666" }}>Cair Hari Ini ke Freelancer:</span>
+                      <b style={{ color: "var(--cairin-green)", fontFamily: "var(--mono)", fontSize: "14px" }}>
+                        ${livePayoutAmount.toFixed(0)} USDC
+                      </b>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#666" }}>Margin Keuntungan Funder:</span>
+                      <b style={{ color: "var(--cairin-orange)", fontFamily: "var(--mono)" }}>
+                        +${liveInvestorMargin.toFixed(0)} USDC
+                      </b>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Context Action Button Inside Voucher */}
+              <div className="voucher-interactive-action">
+                {selectedInvoice.status === InvoiceStatus.Financed && (
+                  <div onClick={() => handlePayInvoice(selectedInvoice.id)}>
+                    <b>✅ Didanai Funder 1 ({formatShortAddress(selectedInvoice.funder)})</b>
+                    <small>Klik untuk simulasikan: Klien Lunasi Tagihan</small>
+                  </div>
+                )}
+                {selectedInvoice.status === InvoiceStatus.Listed && (
+                  <div onClick={() => handleFundInvoice(selectedInvoice.id)}>
+                    <b>👉 Klik: Danai Sekarang ({formatCurrency(selectedInvoice.listingPrice)})</b>
+                    <small>Uang langsung ditransfer ke dompet freelancer</small>
+                  </div>
+                )}
+                {selectedInvoice.status === InvoiceStatus.Approved && (
+                  <div onClick={() => handleListInvoice(selectedInvoice.id, liveDiscountPct)}>
+                    <b>👉 Klik: Pasang di Bursa Investor</b>
+                    <small>Daftarkan penawaran diskon ke pasar pendanaan</small>
+                  </div>
+                )}
+                {selectedInvoice.status === InvoiceStatus.Created && (
+                  <div onClick={() => handleApproveInvoice(selectedInvoice.id)}>
+                    <b>👉 Klik: Simulasikan Persetujuan Klien</b>
+                    <small>Ubah status draf menjadi disetujui sah</small>
+                  </div>
+                )}
+                {selectedInvoice.status === InvoiceStatus.Paid && (
+                  <div>
+                    <b>✓ Selesai Dilunasi Oleh Klien</b>
+                    <small>Pelunasan 100% tuntas di Base Sepolia</small>
+                  </div>
+                )}
+              </div>
+
+              {/* Cycle through invoices right on voucher */}
+              <div className="voucher-cycle-nav">
+                <button
+                  type="button"
+                  className="voucher-cycle-btn"
+                  onClick={() => cycleInvoice("prev")}
+                >
+                  &larr; Sebelumnya
+                </button>
+                <span style={{ color: "#666" }}>
+                  Invoice {invoices.findIndex((i) => i.id === selectedInvoice.id) + 1} dari {invoices.length}
+                </span>
+                <button
+                  type="button"
+                  className="voucher-cycle-btn"
+                  onClick={() => cycleInvoice("next")}
+                >
+                  Selanjutnya &rarr;
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 3. Brutalist Marquee Ticker */}
+        <section className="marquee-ticker" aria-label="Ticker">
+          <div className="marquee-track">
+            <div className="marquee-item">
+              HAK TAGIH RWA ON-CHAIN <span className="plus">+</span>
+              ANTI-DOUBLE FUNDING VERIFIED <span className="plus">+</span>
+              PENCAIRAN DI MUKA HARI INI <span className="plus">+</span>
+              SMART CONTRACT ERC-721 <span className="plus">+</span>
+              BASE SEPOLIA TESTNET <span className="plus">+</span>
+              USDC STABLECOIN SETTLEMENT <span className="plus">+</span>
+            </div>
+            <div className="marquee-item" aria-hidden="true">
+              HAK TAGIH RWA ON-CHAIN <span className="plus">+</span>
+              ANTI-DOUBLE FUNDING VERIFIED <span className="plus">+</span>
+              PENCAIRAN DI MUKA HARI INI <span className="plus">+</span>
+              SMART CONTRACT ERC-721 <span className="plus">+</span>
+              BASE SEPOLIA TESTNET <span className="plus">+</span>
+              USDC STABLECOIN SETTLEMENT <span className="plus">+</span>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. Clickable Interactive Stats Metric Strip */}
+        <section className="wrap stats-metric-strip">
+          <div
+            className={`stat-cell interactive ${filterStatus === "all" ? "active" : ""}`}
+            onClick={() => setFilterStatus("all")}
+            title="Klik untuk melihat semua invoice di tabel"
+          >
+            <span className="stat-cell-label">Total Nilai Tagihan</span>
+            <span className="stat-cell-number">{formatCurrency(totalAmount)}</span>
+            <span className="stat-cell-note">{invoices.length} invoice terbit (Klik untuk filter)</span>
+          </div>
+
+          <div
+            className={`stat-cell interactive ${filterStatus === "financed" ? "active" : ""}`}
+            onClick={() => setFilterStatus("financed")}
+            title="Klik untuk melihat invoice yang sudah didanai"
+          >
+            <span className="stat-cell-label">Uang Cair ke Freelancer</span>
+            <span className="stat-cell-number" style={{ color: "var(--cairin-emerald)" }}>
+              {formatCurrency(totalFinanced)}
+            </span>
+            <span className="stat-cell-note">Sudah masuk rekening Web3 (Klik untuk filter)</span>
+          </div>
+
+          <div
+            className={`stat-cell interactive ${filterStatus === "listed" ? "active" : ""}`}
+            onClick={() => setFilterStatus("listed")}
+            title="Klik untuk melihat invoice yang siap didanai"
+          >
+            <span className="stat-cell-label">Tersedia di Bursa</span>
+            <span className="stat-cell-number" style={{ color: "var(--cairin-orange)" }}>
+              {formatCurrency(totalListed)}
+            </span>
+            <span className="stat-cell-note">Siap didanai investor (Klik untuk filter)</span>
+          </div>
+
+          <div
+            className="stat-cell interactive"
+            onClick={() => {
+              const el = document.getElementById("battle-test");
+              el?.scrollIntoView({ behavior: "smooth" });
+            }}
+            title="Klik untuk menuju tes keamanan"
+          >
+            <span className="stat-cell-label">Keamanan Smart Contract</span>
+            <span className="stat-cell-number" style={{ color: "var(--cairin-green)" }}>
+              Anti-Ganda
+            </span>
+            <span className="stat-cell-note">State machine Base Sepolia (Uji di bawah &darr;)</span>
+          </div>
+        </section>
+
+        {/* 5. The Interactive Ledger Workspace */}
+        <section className="wrap" id="buku-piutang">
+          <div className="section-headline-box">
+            <div>
+              <div className="eyebrow-tag">
+                <span className="eyebrow-bar" />
+                <span>BUKU BESAR FREELANCER</span>
+              </div>
+              <h2 className="section-title">Kelola & Cairkan Invoice</h2>
+            </div>
+
+            <button
+              type="button"
+              className="btn-brutal btn-orange"
+              onClick={() => setShowCreateModal(true)}
+            >
+              <span>+ Terbitkan Invoice</span>
+              <span aria-hidden="true">&darr;</span>
+            </button>
+          </div>
+
+          <div className="ledger-workspace">
+            {/* Filter Pills Bar + Search Input */}
+            <div className="ledger-filters-bar">
+              <div className="filter-pills-group">
+                <button
+                  type="button"
+                  className={`filter-pill ${filterStatus === "all" ? "active" : ""}`}
+                  onClick={() => setFilterStatus("all")}
+                >
+                  Semua ({invoices.length})
+                </button>
+                <button
+                  type="button"
+                  className={`filter-pill ${filterStatus === "draft" ? "active" : ""}`}
                   onClick={() => setFilterStatus("draft")}
                 >
                   Draft
                 </button>
                 <button
                   type="button"
-                  className={`filter-chip ${filterStatus === "approved" ? "active" : ""}`}
+                  className={`filter-pill ${filterStatus === "approved" ? "active" : ""}`}
                   onClick={() => setFilterStatus("approved")}
                 >
                   Disetujui
                 </button>
                 <button
                   type="button"
-                  className={`filter-chip ${filterStatus === "listed" ? "active" : ""}`}
+                  className={`filter-pill ${filterStatus === "listed" ? "active" : ""}`}
                   onClick={() => setFilterStatus("listed")}
                 >
                   Dijual
                 </button>
                 <button
                   type="button"
-                  className={`filter-chip ${filterStatus === "financed" ? "active" : ""}`}
+                  className={`filter-pill ${filterStatus === "financed" ? "active" : ""}`}
                   onClick={() => setFilterStatus("financed")}
                 >
                   Didanai
                 </button>
               </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <input
+                  type="text"
+                  placeholder="Cari judul / ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    padding: "6px 12px",
+                    border: "1.5px solid var(--ink)",
+                    fontFamily: "var(--mono)",
+                    fontSize: "12px",
+                    outline: "none",
+                    background: "#FFFFFF",
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: "var(--mono)",
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    color: "#555",
+                  }}
+                >
+                  KLIK BARIS UNTUK INSPEKSI
+                </span>
+              </div>
             </div>
 
-            <div style={{ padding: "12px 18px", borderBottom: "1px solid var(--border-light)" }}>
-              <input
-                type="text"
-                placeholder="Cari invoice berdasarkan judul atau ID..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="input-field"
-                style={{ margin: 0, padding: "8px 12px", fontSize: "13px" }}
-              />
-            </div>
-
-            <div style={{ maxHeight: "560px", overflowY: "auto" }}>
+            {/* List Baris Invoice */}
+            <div className="ledger-items-list">
               {filteredInvoices.map((inv) => {
                 const isSelected = inv.id === selectedInvoice.id;
+
                 return (
                   <div
                     key={inv.id.toString()}
-                    className={`invoice-row-card ${isSelected ? "selected" : ""}`}
+                    className={`ledger-row-item ${isSelected ? "selected" : ""}`}
                     onClick={() => setSelectedInvoiceId(inv.id)}
                   >
-                    <div className="invoice-left-meta">
-                      <div className="invoice-id-tag">#INV-{inv.id.toString().padStart(3, "0")}</div>
-                      <div className="invoice-job-name">{inv.jobTitle}</div>
-                      <div className="invoice-client-sub">
-                        Klien: {formatShortAddress(inv.client)} • Tempo: {formatDate(inv.dueDate)}
-                      </div>
+                    <span className="col-mono" style={{ fontWeight: 800 }}>
+                      #INV-{inv.id.toString().padStart(3, "0")}
+                    </span>
+
+                    <div className="col-job">
+                      <b>{inv.jobTitle}</b>
+                      <small>Klien: {formatShortAddress(inv.client)}</small>
                     </div>
 
-                    <div className="invoice-right-meta">
-                      <div className="invoice-amount-text">{formatCurrency(inv.amount)}</div>
-                      {inv.status === InvoiceStatus.Created && (
-                        <span className="status-pill draft">Draft</span>
-                      )}
-                      {inv.status === InvoiceStatus.Approved && (
-                        <span className="status-pill approved">Disetujui</span>
+                    <div style={{ fontFamily: "var(--mono)", fontSize: "12px", color: "#666" }}>
+                      Tempo: {formatDate(inv.dueDate)}
+                    </div>
+
+                    <div className="col-mono" style={{ fontWeight: 700 }}>
+                      {formatCurrency(inv.amount)}
+                    </div>
+
+                    <div
+                      className="col-mono"
+                      style={{ color: "var(--cairin-orange)", fontWeight: 700 }}
+                    >
+                      {inv.listingPrice > 0n ? formatCurrency(inv.listingPrice) : "—"}
+                    </div>
+
+                    <div>
+                      {inv.status === InvoiceStatus.Financed && (
+                        <span className="voucher-stamp-badge stamp-financed">DIDANAI</span>
                       )}
                       {inv.status === InvoiceStatus.Listed && (
-                        <span className="status-pill listed">Dijual ({formatCurrency(inv.listingPrice)})</span>
+                        <span className="voucher-stamp-badge stamp-listed">DIJUAL</span>
                       )}
-                      {inv.status === InvoiceStatus.Financed && (
-                        <span className="status-pill financed">Didanai</span>
+                      {inv.status === InvoiceStatus.Approved && (
+                        <span className="voucher-stamp-badge stamp-approved">DISETUJUI</span>
+                      )}
+                      {inv.status === InvoiceStatus.Created && (
+                        <span className="voucher-stamp-badge stamp-draft">DRAFT</span>
                       )}
                       {inv.status === InvoiceStatus.Paid && (
-                        <span className="status-pill paid">Lunas</span>
+                        <span className="voucher-stamp-badge stamp-financed">LUNAS</span>
                       )}
                     </div>
                   </div>
                 );
               })}
             </div>
-          </div>
 
-          {/* Right Detail & Control Center */}
-          <div className="detail-control-pane">
-            <div className="detail-header-row">
-              <div className="detail-headline">
-                <h3>{selectedInvoice.jobTitle}</h3>
-                <p>TOKEN NFT #INV-{selectedInvoice.id.toString().padStart(3, "0")} • BASE SEPOLIA</p>
-              </div>
-
-              {selectedInvoice.status === InvoiceStatus.Created && (
-                <span className="status-pill draft">Tahap 1: Draft</span>
-              )}
-              {selectedInvoice.status === InvoiceStatus.Approved && (
-                <span className="status-pill approved">Tahap 2: Disetujui</span>
-              )}
-              {selectedInvoice.status === InvoiceStatus.Listed && (
-                <span className="status-pill listed">Tahap 3: Dijual di Bursa</span>
-              )}
-              {selectedInvoice.status === InvoiceStatus.Financed && (
-                <span className="status-pill financed">Tahap 4: Didanai</span>
-              )}
-              {selectedInvoice.status === InvoiceStatus.Paid && (
-                <span className="status-pill paid">Tahap 5: Lunas Selesai</span>
-              )}
-            </div>
-
-            {/* Lifecycle Stepper */}
-            <div className="stepper-container">
-              <div className={`step-item ${selectedInvoice.status >= InvoiceStatus.Created ? "completed active" : ""}`}>
-                <div className="step-circle">1</div>
-                <div className="step-name">Draft</div>
-              </div>
-              <div className={`step-item ${selectedInvoice.status >= InvoiceStatus.Approved ? "completed active" : ""}`}>
-                <div className="step-circle">2</div>
-                <div className="step-name">Verifikasi</div>
-              </div>
-              <div className={`step-item ${selectedInvoice.status >= InvoiceStatus.Listed ? "completed active" : ""}`}>
-                <div className="step-circle">3</div>
-                <div className="step-name">Di Bursa</div>
-              </div>
-              <div className={`step-item ${selectedInvoice.status >= InvoiceStatus.Financed ? "completed active" : ""}`}>
-                <div className="step-circle">4</div>
-                <div className="step-name">Didanai</div>
-              </div>
-              <div className={`step-item ${selectedInvoice.status === InvoiceStatus.Paid ? "completed active" : ""}`}>
-                <div className="step-circle">5</div>
-                <div className="step-name">Lunas</div>
-              </div>
-            </div>
-
-            {/* Financial Ledger Details */}
-            <div className="financial-ledger-box">
-              <div className="ledger-item-row">
-                <span>Nilai Piutang Penuh</span>
-                <b>{formatCurrency(selectedInvoice.amount)}</b>
-              </div>
-              <div className="ledger-item-row">
-                <span>Alamat Klien Pembayar</span>
-                <b title={selectedInvoice.client}>{formatShortAddress(selectedInvoice.client)}</b>
-              </div>
-              <div className="ledger-item-row">
-                <span>Jatuh Tempo Pembayaran</span>
-                <b>{formatDate(selectedInvoice.dueDate)}</b>
-              </div>
-              <div className="ledger-item-row">
-                <span>Pemilik NFT Saat Ini</span>
-                <b>
-                  {selectedInvoice.funder === "0x0000000000000000000000000000000000000000"
-                    ? "Freelancer (Anda)"
-                    : `Funder 1 (${formatShortAddress(selectedInvoice.funder)})`}
-                </b>
-              </div>
-              {selectedInvoice.listingPrice > 0n && (
-                <div className="ledger-item-row">
-                  <span style={{ color: "var(--green-text)" }}>Nilai Pencairan Cepat</span>
-                  <b style={{ color: "var(--green-text)" }}>{formatCurrency(selectedInvoice.listingPrice)}</b>
+            {/* Detail Voucher Drawer untuk Baris Terpilih */}
+            <div className="voucher-detail-drawer">
+              <div className="drawer-details-col">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <h3 style={{ fontSize: "24px", fontWeight: 800, margin: 0, letterSpacing: "-0.02em" }}>
+                    {selectedInvoice.jobTitle}
+                  </h3>
+                  <span style={{ fontFamily: "var(--mono)", fontWeight: 800 }}>
+                    #INV-{selectedInvoice.id.toString().padStart(3, "0")}
+                  </span>
                 </div>
-              )}
-            </div>
 
-            {/* Context Actions */}
-            {selectedInvoice.status === InvoiceStatus.Created && (
-              <div>
-                <div className="action-banner-box info">
-                  Tagihan berstatus Draft. Klien harus memberikan verifikasi sah agar hak tagih dapat didaftarkan ke bursa pembiayaan.
-                </div>
-                <button
-                  type="button"
-                  className="btn-big-action green"
-                  onClick={() => handleApproveInvoice(selectedInvoice.id)}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "16px",
+                    padding: "16px 0",
+                    borderBlock: "1px dashed var(--line)",
+                  }}
                 >
-                  <span>✍️ Simulasikan: Klien Tanda Tangan & Setujui</span>
-                </button>
-              </div>
-            )}
-
-            {selectedInvoice.status === InvoiceStatus.Approved && (
-              <div>
-                <div className="action-banner-box info">
-                  Klien telah mengesahkan invoice ini! Sekarang pilih besaran diskon penawaran untuk investor agar dana Anda lekas cair hari ini.
-                </div>
-
-                <div className="interactive-slider-box">
-                  <div className="slider-label-row">
-                    <span>Diskon Penawaran Investor</span>
-                    <span>{listingDiscountPct}%</span>
+                  <div>
+                    <small
+                      style={{
+                        fontFamily: "var(--mono)",
+                        fontSize: "11px",
+                        color: "#666",
+                        display: "block",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      ALAMAT KLIEN PEMBAYAR
+                    </small>
+                    <span style={{ fontFamily: "var(--mono)", fontSize: "13px", fontWeight: 700 }}>
+                      {selectedInvoice.client}
+                    </span>
                   </div>
-                  <input
-                    type="range"
-                    min="3"
-                    max="20"
-                    step="1"
-                    value={listingDiscountPct}
-                    onChange={(e) => setListingDiscountPct(Number(e.target.value))}
-                    className="slider-control"
-                  />
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginTop: "10px", color: "#78350F" }}>
-                    <span>Dana diterima freelancer:</span>
-                    <b>
-                      {(
-                        (Number(formatUnits(selectedInvoice.amount, 6)) * (100 - listingDiscountPct)) /
-                        100
-                      ).toFixed(1)}{" "}
-                      USDC
-                    </b>
+                  <div>
+                    <small
+                      style={{
+                        fontFamily: "var(--mono)",
+                        fontSize: "11px",
+                        color: "#666",
+                        display: "block",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      INVESTOR PEMEGANG NFT
+                    </small>
+                    <span style={{ fontFamily: "var(--mono)", fontSize: "13px", fontWeight: 700 }}>
+                      {selectedInvoice.funder === "0x0000000000000000000000000000000000000000"
+                        ? "Belum ada pendana (Hak milik Anda)"
+                        : selectedInvoice.funder}
+                    </span>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  className="btn-big-action orange"
-                  onClick={() => handleListInvoice(selectedInvoice.id)}
-                >
-                  <span>🚀 Daftarkan ke Bursa Investor</span>
-                </button>
-              </div>
-            )}
-
-            {selectedInvoice.status === InvoiceStatus.Listed && (
-              <div>
-                <div className="action-banner-box success">
-                  Invoice telah aktif di bursa seharga <b>{formatCurrency(selectedInvoice.listingPrice)}</b>. Investor dapat langsung mendanai hak tagih ini.
-                </div>
-                <button
-                  type="button"
-                  className="btn-big-action green"
-                  onClick={() => handleFundInvoice(selectedInvoice.id)}
-                >
-                  <span>💎 Danai Invoice Sekarang (Sebagai Funder 1)</span>
-                </button>
-              </div>
-            )}
-
-            {selectedInvoice.status === InvoiceStatus.Financed && (
-              <div>
-                <div className="action-banner-box success">
-                  ✅ <b>Dana telah cair ke dompet freelancer!</b> NFT hak tagih sekarang dipegang oleh investor Funder 1. Satu invoice ini terlindungi secara atomik dari risiko pembiayaan ganda.
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <button
-                    type="button"
-                    className="btn-big-action dark"
-                    onClick={() => handlePayInvoice(selectedInvoice.id)}
-                  >
-                    <span>💳 Klien Bayar Pelunasan (Jatuh Tempo)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn-big-action orange"
-                    style={{ background: "#DC2626" }}
-                    onClick={() => {
-                      setActiveRole("security");
-                      handleTriggerRevertTest();
-                    }}
-                  >
-                    <span>⚡ Uji Penolakan: Funder 2 Coba Beli Lagi</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {selectedInvoice.status === InvoiceStatus.Paid && (
-              <div className="action-banner-box success" style={{ textAlign: "center" }}>
-                <b>🎉 Invoice Telah Lunas Selesai!</b>
-                <p style={{ marginTop: "4px", fontSize: "13px" }}>
-                  Dana {formatCurrency(selectedInvoice.amount)} otomatis disetorkan kepada pemegang NFT di Base Sepolia.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 5. Investor Marketplace View */}
-      {activeRole === "investor" && (
-        <div>
-          <div style={{ marginBottom: "20px" }}>
-            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "var(--ink-heading)" }}>
-              Bursa Hak Tagih Terverifikasi (Invoice Marketplace)
-            </h2>
-            <p style={{ color: "var(--ink-muted)", fontSize: "14px" }}>
-              Danai invoice freelancer di muka dengan harga diskon, terima pelunasan penuh saat klien membayar saat jatuh tempo.
-            </p>
-          </div>
-
-          {listedInvoices.length === 0 ? (
-            <div style={{ background: "var(--bg-surface)", padding: "40px", textAlign: "center", borderRadius: "14px", border: "1px solid var(--border-medium)" }}>
-              <p style={{ color: "var(--ink-muted)", fontSize: "15px" }}>
-                Saat ini belum ada invoice yang terdaftar di bursa. Buat invoice baru atau ubah status invoice yang disetujui menjadi &quot;Dijual&quot;.
-              </p>
-              <button
-                type="button"
-                className="btn-primary-action"
-                style={{ marginTop: "16px" }}
-                onClick={() => setActiveRole("freelancer")}
-              >
-                <span>Kembali ke Workspace Freelancer</span>
-              </button>
-            </div>
-          ) : (
-            <div className="market-grid">
-              {listedInvoices.map((inv) => {
-                const profit = Number(formatUnits(inv.amount - inv.listingPrice, 6));
-                const yieldPct = ((profit / Number(formatUnits(inv.listingPrice, 6))) * 100).toFixed(1);
-
-                return (
-                  <div key={inv.id.toString()} className="market-card">
+                <div style={{ display: "flex", gap: "28px", fontSize: "14px", flexWrap: "wrap" }}>
+                  <div>
+                    <span style={{ color: "#666" }}>Nilai Piutang Penuh: </span>
+                    <b style={{ fontFamily: "var(--mono)" }}>{formatCurrency(selectedInvoice.amount)}</b>
+                  </div>
+                  {selectedInvoice.listingPrice > 0n && (
                     <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                        <span className="status-pill listed">Tersedia</span>
-                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-muted)" }}>
-                          #INV-{inv.id.toString().padStart(3, "0")}
-                        </span>
-                      </div>
-
-                      <h3 style={{ fontSize: "17px", fontWeight: 700, marginBottom: "8px", color: "var(--ink-heading)" }}>
-                        {inv.jobTitle}
-                      </h3>
-
-                      <div style={{ fontSize: "13px", color: "var(--ink-muted)", marginBottom: "16px" }}>
-                        Klien: {formatShortAddress(inv.client)} • Jatuh Tempo: {formatDate(inv.dueDate)}
-                      </div>
-
-                      <div className="financial-ledger-box" style={{ padding: "12px 14px", marginBottom: "16px" }}>
-                        <div className="ledger-item-row">
-                          <span>Modal Pendanaan:</span>
-                          <b>{formatCurrency(inv.listingPrice)}</b>
-                        </div>
-                        <div className="ledger-item-row">
-                          <span>Pelunasan Tempo:</span>
-                          <b>{formatCurrency(inv.amount)}</b>
-                        </div>
-                        <div className="ledger-item-row">
-                          <span style={{ color: "var(--green-text)" }}>Keuntungan Bersih:</span>
-                          <b style={{ color: "var(--green-text)" }}>+{profit.toLocaleString("id-ID")} USDC (+{yieldPct}%)</b>
-                        </div>
-                      </div>
+                      <span style={{ color: "#666" }}>Pencairan Di Muka: </span>
+                      <b style={{ fontFamily: "var(--mono)", color: "var(--cairin-green)" }}>
+                        {formatCurrency(selectedInvoice.listingPrice)}
+                      </b>
                     </div>
+                  )}
+                  {selectedInvoice.listingPrice > 0n && (
+                    <div>
+                      <span style={{ color: "#666" }}>Margin Keuntungan Funder: </span>
+                      <b style={{ fontFamily: "var(--mono)", color: "var(--cairin-orange)" }}>
+                        {formatCurrency(selectedInvoice.amount - selectedInvoice.listingPrice)}
+                      </b>
+                    </div>
+                  )}
+                </div>
+              </div>
 
+              {/* Panel Aksi Interaktif Sesuai Status Invoice */}
+              <div className="drawer-actions-col">
+                <span
+                  style={{
+                    fontFamily: "var(--mono)",
+                    fontSize: "11px",
+                    fontWeight: 900,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  TINDAKAN SIKLUS HIDUP INVOICE
+                </span>
+
+                {selectedInvoice.status === InvoiceStatus.Created && (
+                  <div>
+                    <p style={{ fontSize: "13.5px", color: "#555", marginBottom: "14px", lineHeight: 1.5 }}>
+                      Status masih <strong>Draft</strong>. Klien harus memberikan verifikasi tanda tangan agar invoice sah dijual.
+                    </p>
                     <button
                       type="button"
-                      className="btn-big-action green"
-                      onClick={() => handleFundInvoice(inv.id)}
+                      className="btn-brutal btn-acid"
+                      style={{ width: "100%", justifyContent: "center" }}
+                      onClick={() => handleApproveInvoice(selectedInvoice.id)}
                     >
-                      <span>Danai Sekarang ({formatCurrency(inv.listingPrice)})</span>
+                      Klien Sahkan & Setujui Tagihan &rarr;
                     </button>
                   </div>
-                );
-              })}
+                )}
+
+                {selectedInvoice.status === InvoiceStatus.Approved && (
+                  <div>
+                    <p style={{ fontSize: "13px", color: "#555", marginBottom: "10px" }}>
+                      Tentukan diskon penawaran untuk investor agar lekas cair:
+                    </p>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontFamily: "var(--mono)", fontSize: "12px", fontWeight: 700 }}>
+                      <span>Diskon: {drawerDiscountPct}%</span>
+                      <span style={{ color: "var(--cairin-green)" }}>
+                        Cair: {(Number(formatUnits(selectedInvoice.amount, 6)) * (100 - drawerDiscountPct) / 100).toFixed(0)} USDC
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="2"
+                      max="20"
+                      step="1"
+                      value={drawerDiscountPct}
+                      onChange={(e) => setDrawerDiscountPct(Number(e.target.value))}
+                      style={{ width: "100%", accentColor: "var(--cairin-orange)", cursor: "pointer", marginBottom: "14px" }}
+                    />
+                    <button
+                      type="button"
+                      className="btn-brutal btn-orange"
+                      style={{ width: "100%", justifyContent: "center" }}
+                      onClick={() => handleListInvoice(selectedInvoice.id, drawerDiscountPct)}
+                    >
+                      Jual Hak Tagih ke Bursa &rarr;
+                    </button>
+                  </div>
+                )}
+
+                {selectedInvoice.status === InvoiceStatus.Listed && (
+                  <div>
+                    <p style={{ fontSize: "13px", color: "#555", marginBottom: "12px", lineHeight: 1.5 }}>
+                      Invoice terdaftar di bursa seharga <b>{formatCurrency(selectedInvoice.listingPrice)}</b>.
+                    </p>
+                    <button
+                      type="button"
+                      className="btn-brutal btn-acid"
+                      style={{ width: "100%", justifyContent: "center" }}
+                      onClick={() => handleFundInvoice(selectedInvoice.id)}
+                    >
+                      Danai Sebagai Investor (Funder 1) &rarr;
+                    </button>
+                  </div>
+                )}
+
+                {selectedInvoice.status === InvoiceStatus.Financed && (
+                  <div>
+                    <div
+                      style={{
+                        background: "#e0f2fe",
+                        padding: "12px",
+                        border: "1.5px solid #0284c7",
+                        fontSize: "12px",
+                        marginBottom: "14px",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      🛡️ <strong>Terkunci:</strong> Uang sudah masuk ke freelancer. Invoice ini aman dari pendanaan ganda.
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-brutal btn-ink"
+                      style={{ width: "100%", justifyContent: "center", marginBottom: "10px" }}
+                      onClick={() => handlePayInvoice(selectedInvoice.id)}
+                    >
+                      Klien Lunasi Tagihan (Jatuh Tempo) &rarr;
+                    </button>
+                    <a
+                      href="#battle-test"
+                      className="btn-brutal btn-outline"
+                      style={{ width: "100%", justifyContent: "center", fontSize: "12px" }}
+                    >
+                      Uji Penolakan Funder 2 &darr;
+                    </a>
+                  </div>
+                )}
+
+                {selectedInvoice.status === InvoiceStatus.Paid && (
+                  <div
+                    style={{
+                      background: "var(--cairin-mint)",
+                      padding: "16px",
+                      border: "2px solid var(--cairin-green)",
+                      textAlign: "center",
+                      fontWeight: 800,
+                      fontSize: "13px",
+                      color: "var(--cairin-green)",
+                    }}
+                  >
+                    LUNAS • KONTRAK SELESAI PENUH
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* 6. Security Lab / Anti-Double Funding Demo */}
-      {activeRole === "security" && (
-        <div>
-          <div style={{ marginBottom: "24px" }}>
-            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "var(--ink-heading)" }}>
-              Laboratorium Verifikasi Keamanan: Anti-Double Funding
-            </h2>
-            <p style={{ color: "var(--ink-muted)", fontSize: "14px" }}>
-              Uji langsung keunggulan smart contract CairIn di Base Sepolia: invoice yang telah didanai terlindungi secara mutlak dari penipuan pendanaan ganda.
-            </p>
           </div>
+        </section>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "24px", alignItems: "start" }}>
-            <div style={{ background: "var(--bg-surface)", border: "1px solid var(--border-medium)", borderRadius: "14px", padding: "24px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-                <span style={{ fontSize: "24px" }}>🛡️</span>
-                <div>
-                  <h3 style={{ fontSize: "17px", fontWeight: 700 }}>Pemeriksaan State Atomik</h3>
-                  <p style={{ fontSize: "12.5px", color: "var(--ink-muted)" }}>Target: Invoice #INV-001 (Sudah didanai oleh Funder 1)</p>
-                </div>
+        {/* 6. Anti-Double Funding Live Battle Test Section */}
+        <section className="battle-test-section" id="battle-test">
+          <div className="wrap battle-grid">
+            <div>
+              <div className="eyebrow-tag" style={{ color: "var(--paper)" }}>
+                <span className="eyebrow-bar" />
+                <span>KEAMANAN KUNCI RWA • BASE SEPOLIA</span>
               </div>
 
-              <div style={{ fontSize: "13.5px", lineHeight: "1.6", color: "var(--ink-body)", marginBottom: "20px" }}>
-                Pada industri factoring konvensional, pelaku usaha nakal sering menjual satu faktur yang sama ke 2 perusahaan pembiayaan yang berbeda.
-                <br /><br />
-                Di <strong>CairIn</strong>, kepemilikan tagihan diikat dalam NFT ERC-721. Fungsi <code>fundInvoice</code> secara ketat mewajibkan status <code>Listed</code>. Jika seorang penyerang atau Funder 2 mencoba mendanai invoice yang sudah didanai, EVM akan langsung membatalkan transaksi (revert).
-              </div>
+              <h2 className="battle-title">
+                Satu invoice. Mustahil didanai dua kali.
+              </h2>
+
+              <p className="battle-lede">
+                Dalam pembiayaan tagihan konvensional, penipuan terbesar adalah satu invoice yang sama
+                dijual ke beberapa perusahaan keuangan sekaligus.
+                Di CairIn, setiap invoice diikat menjadi NFT ERC-721 dengan state machine yang ketat.
+                Begitu Funder 1 mendanai, status seketika terkunci dan sistem menolak otomatis upaya pendanaan susulan.
+              </p>
 
               <button
                 type="button"
-                className="btn-big-action orange"
-                disabled={revertRunning}
-                onClick={handleTriggerRevertTest}
-                style={{ background: "#DC2626" }}
+                className="btn-brutal btn-acid"
+                onClick={runBattleTest}
+                disabled={isTestingRevert}
+                style={{ width: "max-content" }}
               >
-                <span>{revertRunning ? "Mengirim Panggilan Blockchain..." : "⚡ Eksekusi Serangan: Funder 2 Coba Bayar"}</span>
+                <span>
+                  {isTestingRevert ? "Memeriksa State Mesin..." : "⚡ Coba Beli Sebagai Funder 2"}
+                </span>
+                <span aria-hidden="true">&rarr;</span>
               </button>
             </div>
 
-            {/* EVM Terminal Log */}
-            <div className="terminal-window">
-              <div className="terminal-titlebar">
-                <div className="terminal-dots">
-                  <span className="terminal-dot red" />
-                  <span className="terminal-dot yellow" />
-                  <span className="terminal-dot green" />
-                </div>
-                <div className="terminal-title">Base Sepolia EVM Execution Trace</div>
-                <div style={{ fontSize: "11px", color: "#60A5FA" }}>RPC: 84532</div>
+            {/* The Live Revert Verification Card */}
+            <div className="revert-verify-box">
+              <div className="revert-verify-head">
+                <span>SIMULASI SMART CONTRACT</span>
+                <i
+                  style={{
+                    background: "var(--cairin-mint)",
+                    padding: "3px 8px",
+                    borderRadius: "2px",
+                    fontStyle: "normal",
+                  }}
+                >
+                  EVM CALL
+                </i>
               </div>
 
-              <div className="terminal-body">
-                {revertLogs.map((log, idx) => (
-                  <div
-                    key={idx}
-                    className={`terminal-line ${
-                      log.includes("REVERT") || log.includes("Expected")
-                        ? "error"
-                        : log.includes("✓") || log.includes("aman")
-                        ? "success"
-                        : log.includes("▶") || log.includes("Transaksi")
-                        ? "info"
-                        : ""
-                    }`}
-                  >
-                    {log}
-                  </div>
-                ))}
+              <div style={{ padding: "18px 0" }}>
+                <b style={{ fontSize: "20px", display: "block", fontWeight: 800 }}>
+                  Target: Invoice #INV-001
+                </b>
+                <span style={{ fontFamily: "var(--mono)", fontSize: "12px", color: "#666" }}>
+                  Status Saat Ini: Financed (Dimiliki Funder 1)
+                </span>
               </div>
 
-              {revertSuccess && (
-                <div style={{ background: "#166534", padding: "12px 18px", color: "#FFFFFF", fontSize: "12.5px", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span>🛡️</span>
-                  <span>Hasil Uji: Smart Contract Berhasil Menolak Pendanaan Ganda! Dana Funder 2 Tidak Terpotong.</span>
-                </div>
-              )}
+              <ul className="revert-check-list">
+                <li>
+                  <span className="check-dot" />
+                  <span>Funder 1 Mendanai & Mentransfer USDC</span>
+                  <b style={{ color: "var(--cairin-green)" }}>SUKSES</b>
+                </li>
+
+                <li>
+                  <span className={revertStep >= 1 ? "check-dot" : "check-dot red"} />
+                  <span>Funder 2 Mengirim Transaksi Pembelian</span>
+                  <b>{revertStep >= 1 ? "DIPROSES" : "MENUNGGU"}</b>
+                </li>
+
+                <li>
+                  <span className={revertStep >= 2 ? "check-dot red" : "check-dot"} />
+                  <span>Validasi Status: require(status == Listed)</span>
+                  <b>{revertStep >= 2 ? "GAGAL (STATUS = FINANCED)" : "MENUNGGU"}</b>
+                </li>
+
+                <li>
+                  <span className={revertState === "reverted" ? "check-dot red" : "check-dot"} />
+                  <span>EVM Menolak Transaksi (Revert Gas Refund)</span>
+                  <b style={{ color: revertState === "reverted" ? "var(--cairin-red)" : "#666" }}>
+                    {revertState === "reverted" ? "REVERTED" : "MENUNGGU"}
+                  </b>
+                </li>
+              </ul>
+
+              <div
+                className={`revert-stamp-verdict ${
+                  revertState === "reverted" ? "verdict-reverted" : "verdict-safe"
+                }`}
+              >
+                {revertState === "reverted"
+                  ? "TRANSAKSI FUNDER 2 DITOLAK: SALDO AMAN 100%"
+                  : "KLIK TOMBOL UNTUK MENJALANKAN UJI COBA SERANGAN"}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="wrap">
+        <div>&copy; 2026 CAIRIN — BASE SEPOLIA TESTNET</div>
+        <div>ETHEREUM JAKARTA 2026 HACKATHON</div>
+      </footer>
 
       {/* 7. Modal: Terbitkan Invoice Baru */}
       {showCreateModal && (
-        <div className="modal-backdrop" onClick={() => setShowCreateModal(false)}>
-          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-title-row">
-              <h3>Terbitkan Invoice Baru</h3>
+        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal-content-card" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ fontSize: "22px", fontWeight: 800 }}>Terbitkan Invoice Baru</h3>
               <button
                 type="button"
-                style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--ink-muted)" }}
+                style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer", fontWeight: 800 }}
                 onClick={() => setShowCreateModal(false)}
               >
                 &times;
@@ -916,65 +1110,65 @@ export default function CairInCleanApp() {
 
             <form onSubmit={handleCreateInvoice}>
               <div>
-                <label style={{ fontSize: "13px", fontWeight: 700, color: "var(--ink-heading)" }}>
-                  Judul Pekerjaan / Lingkup Proyek
+                <label style={{ fontFamily: "var(--mono)", fontSize: "11px", fontWeight: 800, textTransform: "uppercase" }}>
+                  Judul Pekerjaan / Jasa Freelance
                 </label>
                 <input
                   type="text"
-                  placeholder="Contoh: Pembuatan UI/UX Website & Desain Logo"
+                  placeholder="Contoh: Pembuatan Website E-Commerce & Desain UI"
                   value={jobTitleInput}
                   onChange={(e) => setJobTitleInput(e.target.value)}
-                  className="input-field"
+                  className="field-input-brutal"
                   required
                 />
               </div>
 
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                  <label style={{ fontSize: "13px", fontWeight: 700, color: "var(--ink-heading)" }}>
+                  <label style={{ fontFamily: "var(--mono)", fontSize: "11px", fontWeight: 800, textTransform: "uppercase" }}>
                     Alamat Dompet Klien (Pembayar)
                   </label>
                   <button
                     type="button"
-                    style={{ background: "none", border: "none", color: "var(--blue-text)", fontSize: "11.5px", cursor: "pointer" }}
-                    onClick={() => setClientAddressInput("0x70997970C51812dc3A010C7d01b50e0d17dc79C8")}
+                    style={{ background: "none", border: "none", color: "var(--cairin-orange)", fontSize: "11px", cursor: "pointer", fontFamily: "var(--mono)", fontWeight: 700 }}
+                    onClick={() => setClientAddress("0x70997970C51812dc3A010C7d01b50e0d17dc79C8")}
                   >
-                    Gunakan Contoh Dompet Klien
+                    Gunakan Dompet Klien Contoh
                   </button>
                 </div>
                 <input
                   type="text"
-                  placeholder="0x7099... atau 0x..."
-                  value={clientAddressInput}
-                  onChange={(e) => setClientAddressInput(e.target.value)}
-                  className="input-field"
+                  placeholder="0x..."
+                  value={clientAddress}
+                  onChange={(e) => setClientAddress(e.target.value)}
+                  className="field-input-brutal"
                   required
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "16px" }}>
                 <div>
-                  <label style={{ fontSize: "13px", fontWeight: 700, color: "var(--ink-heading)" }}>
+                  <label style={{ fontFamily: "var(--mono)", fontSize: "11px", fontWeight: 800, textTransform: "uppercase" }}>
                     Nilai Tagihan (USDC)
                   </label>
                   <input
                     type="number"
                     placeholder="Contoh: 1500"
-                    value={amountInput}
-                    onChange={(e) => setAmountInput(e.target.value)}
-                    className="input-field"
+                    value={nominalUsdc}
+                    onChange={(e) => setNominalUsdc(e.target.value)}
+                    className="field-input-brutal"
                     required
                   />
                 </div>
 
                 <div>
-                  <label style={{ fontSize: "13px", fontWeight: 700, color: "var(--ink-heading)" }}>
-                    Jatuh Tempo (Hari)
+                  <label style={{ fontFamily: "var(--mono)", fontSize: "11px", fontWeight: 800, textTransform: "uppercase" }}>
+                    Jatuh Tempo
                   </label>
                   <select
-                    value={dueDaysInput}
-                    onChange={(e) => setDueDaysInput(e.target.value)}
-                    className="input-field"
+                    value={dueDays}
+                    onChange={(e) => setDueDays(e.target.value)}
+                    className="field-input-brutal"
                   >
                     <option value="14">14 Hari</option>
                     <option value="30">30 Hari</option>
@@ -984,32 +1178,28 @@ export default function CairInCleanApp() {
                 </div>
               </div>
 
-              <div style={{ background: "#FAF8F5", padding: "12px", borderRadius: "8px", fontSize: "12px", color: "var(--ink-muted)", marginBottom: "16px" }}>
-                💡 <strong>Catatan:</strong> Setelah diterbitkan, invoice akan dicetak sebagai NFT ERC-721 berstatus <code>Draft</code>. Klien Anda dapat mengesahkan tagihan sebelum Anda menjualnya ke investor.
-              </div>
-
-              <div style={{ display: "flex", gap: "10px" }}>
+              <div style={{ display: "flex", gap: "14px", marginTop: "16px" }}>
                 <button
                   type="button"
-                  className="btn-primary-action"
-                  style={{ background: "var(--bg-surface-subtle)", color: "var(--ink-body)", flex: 1, justifyContent: "center" }}
+                  className="btn-brutal btn-outline"
+                  style={{ flex: 1, justifyContent: "center" }}
                   onClick={() => setShowCreateModal(false)}
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="btn-primary-action"
+                  className="btn-brutal btn-acid"
                   disabled={isSubmitting}
                   style={{ flex: 1.5, justifyContent: "center" }}
                 >
-                  {isSubmitting ? "Mencetak NFT..." : "Terbitkan Invoice (NFT)"}
+                  {isSubmitting ? "Mencetak NFT..." : "Cetak NFT Invoice &rarr;"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
