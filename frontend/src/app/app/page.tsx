@@ -17,6 +17,8 @@ import { parseUnits, formatUnits } from "viem";
 import {
   CAIRIN_ADDRESS,
   MOCK_USDC_ADDRESS,
+  CONTRACT_ADDRESSES,
+  getContractAddresses,
   cairInAbi,
   mockUsdcAbi,
   InvoiceStatus,
@@ -516,6 +518,7 @@ export default function PlatformWorkspacePage() {
 
       if (isConnected) {
         const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
+        const targetAddresses = getContractAddresses(targetChainId);
         if (chainId && chainId !== targetChainId && switchChain) {
           try {
             await switchChain({ chainId: targetChainId });
@@ -527,7 +530,7 @@ export default function PlatformWorkspacePage() {
         // 1. Kirim transaksi ke MetaMask
         const hash = await writeContractAsync({
           chainId: targetChainId,
-          address: CAIRIN_ADDRESS,
+          address: targetAddresses.cairIn,
           abi: cairInAbi,
           functionName: "createInvoice",
           args: [clientAddress.trim() as `0x${string}`, parsedAmount, parsedDueDate],
@@ -553,7 +556,7 @@ export default function PlatformWorkspacePage() {
             const INVOICE_CREATED_TOPIC = "0x3fbaae0f1597d7f24bf2231a5fe5248190743aecc5f3da7126965e14e3f1ca4d";
             const createdLog = receipt.logs.find(
               (l) =>
-                l.address.toLowerCase() === CAIRIN_ADDRESS.toLowerCase() &&
+                l.address.toLowerCase() === targetAddresses.cairIn.toLowerCase() &&
                 l.topics &&
                 l.topics[0]?.toLowerCase() === INVOICE_CREATED_TOPIC.toLowerCase()
             );
@@ -620,11 +623,12 @@ export default function PlatformWorkspacePage() {
     setIsClaimingFaucet(true);
     try {
       const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
+      const targetAddresses = getContractAddresses(targetChainId);
       // 1. Mint 10,000 MockUSDC
       const mintAmount = parseUnits("10000", 6);
       const mintHash = await writeContractAsync({
         chainId: targetChainId,
-        address: MOCK_USDC_ADDRESS,
+        address: targetAddresses.mockUsdc,
         abi: mockUsdcAbi,
         functionName: "mint",
         args: [address, mintAmount],
@@ -635,11 +639,11 @@ export default function PlatformWorkspacePage() {
       // 2. Approve CairIn contract
       const approveHash = await writeContractAsync({
         chainId: targetChainId,
-        address: MOCK_USDC_ADDRESS,
+        address: targetAddresses.mockUsdc,
         abi: mockUsdcAbi,
         functionName: "approve",
         args: [
-          CAIRIN_ADDRESS,
+          targetAddresses.cairIn,
           115792089237316195423570985008687907853269984665640564039457584007913129639935n,
         ],
         gas: 100000n,
@@ -672,9 +676,10 @@ export default function PlatformWorkspacePage() {
       }
       try {
         const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
+        const targetAddresses = getContractAddresses(targetChainId);
         const hash = await writeContractAsync({
           chainId: targetChainId,
-          address: CAIRIN_ADDRESS,
+          address: targetAddresses.cairIn,
           abi: cairInAbi,
           functionName: "approveInvoice",
           args: [id],
@@ -712,9 +717,10 @@ export default function PlatformWorkspacePage() {
       } else {
         try {
           const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
+          const targetAddresses = getContractAddresses(targetChainId);
           const hash = await writeContractAsync({
             chainId: targetChainId,
-            address: CAIRIN_ADDRESS,
+            address: targetAddresses.cairIn,
             abi: cairInAbi,
             functionName: "listInvoice",
             args: [id, parsedListing],
@@ -750,12 +756,13 @@ export default function PlatformWorkspacePage() {
       }
       try {
         const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
+        const targetAddresses = getContractAddresses(targetChainId);
 
         // 1. Cek saldo MockUSDC Investor
         try {
           const bal = (await readContract(config, {
             chainId: targetChainId,
-            address: MOCK_USDC_ADDRESS,
+            address: targetAddresses.mockUsdc,
             abi: mockUsdcAbi,
             functionName: "balanceOf",
             args: [address],
@@ -775,20 +782,20 @@ export default function PlatformWorkspacePage() {
         try {
           const allowance = (await readContract(config, {
             chainId: targetChainId,
-            address: MOCK_USDC_ADDRESS,
+            address: targetAddresses.mockUsdc,
             abi: mockUsdcAbi,
             functionName: "allowance",
-            args: [address, CAIRIN_ADDRESS],
+            args: [address, targetAddresses.cairIn],
           })) as bigint;
 
           if (allowance < inv.listingPrice) {
             const approveHash = await writeContractAsync({
               chainId: targetChainId,
-              address: MOCK_USDC_ADDRESS,
+              address: targetAddresses.mockUsdc,
               abi: mockUsdcAbi,
               functionName: "approve",
               args: [
-                CAIRIN_ADDRESS,
+                targetAddresses.cairIn,
                 115792089237316195423570985008687907853269984665640564039457584007913129639935n,
               ],
               gas: 100000n,
@@ -801,7 +808,7 @@ export default function PlatformWorkspacePage() {
 
         const hash = await writeContractAsync({
           chainId: targetChainId,
-          address: CAIRIN_ADDRESS,
+          address: targetAddresses.cairIn,
           abi: cairInAbi,
           functionName: "buyInvoice",
           args: [id],
@@ -849,12 +856,13 @@ export default function PlatformWorkspacePage() {
 
       try {
         const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
+        const targetAddresses = getContractAddresses(targetChainId);
 
         // 1. Cek Saldo MockUSDC Klien
         try {
           const bal = (await readContract(config, {
             chainId: targetChainId,
-            address: MOCK_USDC_ADDRESS,
+            address: targetAddresses.mockUsdc,
             abi: mockUsdcAbi,
             functionName: "balanceOf",
             args: [address],
@@ -874,21 +882,21 @@ export default function PlatformWorkspacePage() {
         try {
           const allowance = (await readContract(config, {
             chainId: targetChainId,
-            address: MOCK_USDC_ADDRESS,
+            address: targetAddresses.mockUsdc,
             abi: mockUsdcAbi,
             functionName: "allowance",
-            args: [address, CAIRIN_ADDRESS],
+            args: [address, targetAddresses.cairIn],
           })) as bigint;
 
           if (allowance < inv.amount) {
             alert("Langkah 1/2: Menyetujui (Approve) izin pembayaran MockUSDC oleh smart contract CashIn...");
             const approveHash = await writeContractAsync({
               chainId: targetChainId,
-              address: MOCK_USDC_ADDRESS,
+              address: targetAddresses.mockUsdc,
               abi: mockUsdcAbi,
               functionName: "approve",
               args: [
-                CAIRIN_ADDRESS,
+                targetAddresses.cairIn,
                 115792089237316195423570985008687907853269984665640564039457584007913129639935n,
               ],
               gas: 100000n,
@@ -903,7 +911,7 @@ export default function PlatformWorkspacePage() {
         // 3. Panggil payInvoice dengan batas gas eksplisit (mencegah fallback MetaMask 21.000.000 gas cap)
         const hash = await writeContractAsync({
           chainId: targetChainId,
-          address: CAIRIN_ADDRESS,
+          address: targetAddresses.cairIn,
           abi: cairInAbi,
           functionName: "payInvoice",
           args: [id],
@@ -1060,7 +1068,7 @@ export default function PlatformWorkspacePage() {
                     <LinkChainIcon size={14} color="#0284c7" style={{ marginTop: "2px", flexShrink: 0 }} />
                     <div>
                       <div style={{ fontSize: "11.5px", fontWeight: 700, color: "#0f172a" }}>Kontrak Base Sepolia Siap</div>
-                      <div style={{ fontSize: "10.5px", color: "#64748b" }}>Node Hardhat lokal & Base Sepolia aktif sinkron</div>
+                      <div style={{ fontSize: "10.5px", color: "#64748b" }}>Jaringan Base Sepolia Testnet (84532) aktif sinkron</div>
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
@@ -1097,14 +1105,29 @@ export default function PlatformWorkspacePage() {
           {activeConnected && (
             <button
               type="button"
-              className={`rx-network-badge ${activeChainId === hardhat.id ? "connected" : "wrong"}`}
+              className={`rx-network-badge ${
+                activeChainId === baseSepolia.id || activeChainId === hardhat.id ? "connected" : "wrong"
+              }`}
               onClick={() => {
-                if (activeChainId !== hardhat.id && switchChain) {
-                  switchChain({ chainId: hardhat.id });
+                if (activeChainId !== baseSepolia.id && switchChain) {
+                  switchChain({ chainId: baseSepolia.id });
                 }
               }}
+              title={
+                activeChainId === baseSepolia.id
+                  ? "Terhubung ke Base Sepolia Testnet"
+                  : activeChainId === hardhat.id
+                  ? "Terhubung ke Hardhat Local Node (Klik untuk beralih ke Base Sepolia)"
+                  : "Jaringan salah! Klik untuk beralih ke Base Sepolia"
+              }
             >
-              <span>{activeChainId === hardhat.id ? "🟢 Hardhat (31337)" : "🔴 Salah Network"}</span>
+              <span>
+                {activeChainId === baseSepolia.id
+                  ? "🟢 Base Sepolia (84532)"
+                  : activeChainId === hardhat.id
+                  ? "🟢 Hardhat Local (31337)"
+                  : "🔴 Salah Network (Pindah ke Base Sepolia)"}
+              </span>
             </button>
           )}
 
@@ -1148,7 +1171,7 @@ export default function PlatformWorkspacePage() {
       {/* Main Content Layout */}
       <main className="rx-content-container">
         {/* Banner Peringatan Salah Jaringan MetaMask */}
-        {activeConnected && activeChainId && activeChainId !== hardhat.id && activeChainId !== baseSepolia.id && (
+        {activeConnected && activeChainId && activeChainId !== baseSepolia.id && activeChainId !== hardhat.id && (
           <div
             style={{
               background: "#fef2f2",
@@ -1164,19 +1187,19 @@ export default function PlatformWorkspacePage() {
           >
             <div>
               <strong style={{ color: "#991b1b", fontSize: "13.5px", display: "block" }}>
-                ⚠️ Dompet Sedang di Jaringan Lain (Chain ID {chainId})
+                ⚠️ Dompet Sedang di Jaringan Lain (Chain ID {activeChainId})
               </strong>
               <span style={{ color: "#7f1d1d", fontSize: "12px" }}>
-                Kontrak CairIn berjalan di jaringan lokal Hardhat (31337). Pindahkan jaringan untuk transaksi on-chain.
+                Smart contract CashIn berjalan di jaringan resmi Base Sepolia Testnet (84532). Pindahkan jaringan dompet untuk transaksi on-chain.
               </span>
             </div>
             <button
               type="button"
               className="rx-action-btn-primary"
               style={{ padding: "8px 16px", fontSize: "12px" }}
-              onClick={() => switchChain && switchChain({ chainId: hardhat.id })}
+              onClick={() => switchChain && switchChain({ chainId: baseSepolia.id })}
             >
-              Pindah ke Hardhat &rarr;
+              Pindah ke Base Sepolia &rarr;
             </button>
           </div>
         )}
@@ -1526,8 +1549,12 @@ export default function PlatformWorkspacePage() {
             <div className="rx-balance-card">
               <div className="rx-balance-head">
                 <span>Saldo Rekening Web3</span>
-                <span className="rx-pill-badge neutral">
-                  🟡 Hardhat Local (31337)
+                <span className={`rx-pill-badge ${activeChainId === baseSepolia.id ? "green" : "neutral"}`}>
+                  {activeChainId === baseSepolia.id
+                    ? "🔵 Base Sepolia (84532)"
+                    : activeChainId === hardhat.id
+                    ? "🟡 Hardhat Local (31337)"
+                    : "⚪ Base Sepolia Testnet"}
                 </span>
               </div>
               <div className="rx-balance-amount">$102,540.00 <span style={{ fontSize: "16px", color: "#64748b" }}>USDC</span></div>
@@ -2667,7 +2694,7 @@ export default function PlatformWorkspacePage() {
             Beranda
           </Link>
           <span style={{ color: "#cbd5e1" }}>•</span>
-          <span style={{ color: "#64748b" }}>Status Jaringan: Aktif (31337 / Base)</span>
+          <span style={{ color: "#64748b" }}>Status Jaringan: Base Sepolia Testnet (84532)</span>
         </div>
       </footer>
 
