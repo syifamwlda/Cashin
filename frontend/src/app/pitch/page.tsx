@@ -27,134 +27,58 @@ export default function PitchDeckPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentSlide]);
 
+  const cardStyle = {
+    background: "#FFFFFF",
+    border: "2px solid #111827",
+    boxShadow: "4px 4px 0 #111827",
+    padding: "18px 20px",
+    color: "#111827",
+  };
+
+  const btnStyle = {
+    padding: "8px 16px",
+    background: "#FFFFFF",
+    border: "1.5px solid #111827",
+    boxShadow: "2px 2px 0 #111827",
+    fontFamily: "var(--mono, monospace)",
+    fontSize: "12px",
+    fontWeight: 700,
+    color: "#111827",
+    cursor: "pointer",
+  };
+
+  const footerStyle = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: "14px",
+    borderTop: "1.5px dashed rgba(17, 24, 39, 0.25)",
+    fontFamily: "var(--mono, monospace)",
+    fontSize: "11.5px",
+    fontWeight: 700,
+    color: "#4B5563",
+  };
+
   return (
     <div style={{ backgroundColor: "#18181b", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px", fontFamily: "var(--sans, 'Plus Jakarta Sans', sans-serif)" }}>
       
-      {/* Scoped CSS to ensure 100% pixel-perfect styling regardless of globals.css */}
-      <style jsx global>{`
-        .deck-toolbar-box {
-          width: min(1080px, 100%);
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: #FAF7F0;
-          border: 2px solid #111827;
-          box-shadow: 5px 5px 0 #111827;
-          padding: 12px 20px;
-          margin-bottom: 16px;
-        }
-        .deck-stage-box {
-          width: min(1080px, 100%);
-          aspect-ratio: 16 / 9;
-          min-height: 580px;
-          background: #FCFAF5;
-          border: 3px solid #111827;
-          box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.75);
-          position: relative;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-        }
-        .pitch-slide {
-          display: flex;
-          width: 100%;
-          height: 100%;
-          padding: 40px 48px;
-          flex-direction: column;
-          justify-content: space-between;
-          color: #111827;
-        }
-        .pitch-grid-2 {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-        }
-        .pitch-grid-3 {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 16px;
-        }
-        .pitch-grid-4 {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 12px;
-        }
-        .pitch-card {
-          background: #FFFFFF;
-          border: 2px solid #111827;
-          box-shadow: 4px 4px 0 #111827;
-          padding: 18px 20px;
-          color: #111827;
-        }
-        .pitch-table {
-          width: 100%;
-          border-collapse: collapse;
-          border: 2px solid #111827;
-          background: #FFFFFF;
-          font-size: 13px;
-        }
-        .pitch-table th, .pitch-table td {
-          border: 1.5px solid #111827;
-          padding: 10px 14px;
-          text-align: left;
-          color: #111827;
-        }
-        .pitch-table th {
-          background: #EFECE6;
-          font-family: var(--mono, monospace);
-          font-weight: 800;
-          font-size: 11px;
-          text-transform: uppercase;
-        }
-        .pitch-btn {
-          padding: 8px 16px;
-          background: #FFFFFF;
-          border: 1.5px solid #111827;
-          box-shadow: 2px 2px 0 #111827;
-          font-family: var(--mono, monospace);
-          font-size: 12px;
-          font-weight: 700;
-          color: #111827;
-          cursor: pointer;
-          transition: all 0.1s;
-        }
-        .pitch-btn:hover {
-          transform: translate(1px, 1px);
-          box-shadow: 1px 1px 0 #111827;
-        }
-        .pitch-btn.primary {
-          background: #D9F99D;
-        }
-        .pitch-footer {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding-top: 14px;
-          border-top: 1.5px dashed rgba(17, 24, 39, 0.25);
-          font-family: var(--mono, monospace);
-          font-size: 11.5px;
-          font-weight: 700;
-          color: #4B5563;
-        }
+      {/* Scoped CSS using standard dangerouslySetInnerHTML for SSR/Vercel compatibility */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .pitch-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .pitch-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .pitch-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .pitch-table { width: 100%; border-collapse: collapse; border: 2px solid #111827; background: #FFFFFF; font-size: 13px; }
+        .pitch-table th, .pitch-table td { border: 1.5px solid #111827; padding: 10px 14px; text-align: left; color: #111827; }
+        .pitch-table th { background: #EFECE6; font-family: var(--mono, monospace); font-weight: 800; font-size: 11px; text-transform: uppercase; }
         @media print {
-          body {
-            background: transparent !important;
-            padding: 0 !important;
-          }
-          .deck-toolbar-box {
-            display: none !important;
-          }
-          .deck-stage-box {
-            border: none !important;
-            box-shadow: none !important;
-            width: 100% !important;
-            height: auto !important;
-          }
+          body { background: transparent !important; padding: 0 !important; }
+          .deck-toolbar-container { display: none !important; }
+          .deck-stage-container { border: none !important; box-shadow: none !important; width: 100% !important; height: auto !important; }
         }
-      `}</style>
+      `}} />
 
       {/* Deck Controls Toolbar */}
-      <header className="deck-toolbar-box">
+      <header className="deck-toolbar-container" style={{ width: "min(1080px, 100%)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#FAF7F0", border: "2px solid #111827", boxShadow: "5px 5px 0 #111827", padding: "12px 20px", marginBottom: "16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 900, fontSize: "16px", color: "#111827" }}>
           <Link href="/" style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ color: "#0d9227", fontFamily: "var(--sans)", fontWeight: 900, fontSize: "20px" }}>CashIn</span>
@@ -169,24 +93,24 @@ export default function PitchDeckPage() {
           <span style={{ fontFamily: "var(--mono, monospace)", fontSize: "13px", fontWeight: 800, color: "#111827", marginRight: "6px" }}>
             Slide {currentSlide + 1} / {totalSlides}
           </span>
-          <button className="pitch-btn" onClick={prevSlide}>
+          <button style={btnStyle} onClick={prevSlide}>
             &larr; Prev
           </button>
-          <button className="pitch-btn" onClick={nextSlide}>
+          <button style={btnStyle} onClick={nextSlide}>
             Next &rarr;
           </button>
-          <button className="pitch-btn primary" onClick={() => window.print()}>
+          <button style={{ ...btnStyle, background: "#D9F99D" }} onClick={() => window.print()}>
             🖨️ Cetak / Simpan PDF
           </button>
         </div>
       </header>
 
       {/* Presentation Stage (16:9 Aspect Ratio) */}
-      <main className="deck-stage-box">
+      <main className="deck-stage-container" style={{ width: "min(1080px, 100%)", aspectRatio: "16 / 9", minHeight: "580px", background: "#FCFAF5", border: "3px solid #111827", boxShadow: "12px 12px 0 rgba(0, 0, 0, 0.75)", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
         
         {/* SLIDE 1: COVER */}
         {currentSlide === 0 && (
-          <div className="pitch-slide">
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
               <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, textTransform: "uppercase", color: "#EA580C", letterSpacing: "0.08em", marginBottom: "8px" }}>
                 ETHEREUM JAKARTA HACKATHON 2026 • RWA PROTOCOL
@@ -203,21 +127,21 @@ export default function PitchDeckPage() {
             </div>
 
             <div className="pitch-grid-3" style={{ margin: "16px 0" }}>
-              <div className="pitch-card" style={{ background: "#D9F99D" }}>
+              <div style={{ ...cardStyle, background: "#D9F99D" }}>
                 <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#166534" }}>TARGET PENGGUNA</div>
                 <b style={{ fontSize: "15px", display: "block", marginTop: "4px" }}>Pekerja Lepas & Agensi Digital</b>
               </div>
-              <div className="pitch-card" style={{ background: "#D1FAE5" }}>
+              <div style={{ ...cardStyle, background: "#D1FAE5" }}>
                 <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#065F46" }}>INSTRUMEN RWA</div>
                 <b style={{ fontSize: "15px", display: "block", marginTop: "4px" }}>NFT ERC-721 + Settlement USDC</b>
               </div>
-              <div className="pitch-card" style={{ background: "#DBEAFE" }}>
+              <div style={{ ...cardStyle, background: "#DBEAFE" }}>
                 <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#1E40AF" }}>JARINGAN BLOCKCHAIN</div>
                 <b style={{ fontSize: "15px", display: "block", marginTop: "4px" }}>Base Sepolia (Ethereum L2)</b>
               </div>
             </div>
 
-            <div className="pitch-footer">
+            <div style={footerStyle}>
               <span>Tim: Syifa Maulida (Product Lead) & Sultan Saladin (Smart Contract)</span>
               <span>cashin-syifamwldas-projects.vercel.app</span>
             </div>
@@ -226,7 +150,7 @@ export default function PitchDeckPage() {
 
         {/* SLIDE 2: THE PROBLEM */}
         {currentSlide === 1 && (
-          <div className="pitch-slide">
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
               <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
                 LATAR BELAKANG MASALAH
@@ -237,28 +161,28 @@ export default function PitchDeckPage() {
             </div>
 
             <div className="pitch-grid-2" style={{ margin: "auto 0" }}>
-              <div className="pitch-card" style={{ borderLeft: "6px solid #EF4444" }}>
+              <div style={{ ...cardStyle, borderLeft: "6px solid #EF4444" }}>
                 <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>⏳ Termin Pembayaran Lama (Net 30-90)</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
                   Pekerjaan selesai hari ini, namun klien baru membayar 1 hingga 3 bulan kemudian. Arus kas freelancer macet untuk kebutuhan hidup bulanan.
                 </p>
               </div>
 
-              <div className="pitch-card" style={{ borderLeft: "6px solid #EF4444" }}>
+              <div style={{ ...cardStyle, borderLeft: "6px solid #EF4444" }}>
                 <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>🏦 Ditolak Perbankan Konvensional</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
                   Bank menolak anjak piutang mikro karena ketiadaan sertifikat agunan fisik tanah/properti dan nominal tiket yang dinilai terlalu kecil.
                 </p>
               </div>
 
-              <div className="pitch-card" style={{ borderLeft: "6px solid #EF4444" }}>
+              <div style={{ ...cardStyle, borderLeft: "6px solid #EF4444" }}>
                 <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>⚠️ Jeratan Pinjol Berbunga Mencekik</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
                   Demi menutupi kebutuhan, freelancer terjerat pinjol berbunga 20–30% per bulan yang memperburuk kondisi keuangan.
                 </p>
               </div>
 
-              <div className="pitch-card" style={{ borderLeft: "6px solid #EF4444" }}>
+              <div style={{ ...cardStyle, borderLeft: "6px solid #EF4444" }}>
                 <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>🛑 Risiko Faktur Ganda di TradFi</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
                   Pada perbankan tradisional, risiko terbesar adalah satu faktur difotokopi dan dijual berulang kali ke beberapa pemodal berbeda (double factoring).
@@ -266,7 +190,7 @@ export default function PitchDeckPage() {
               </div>
             </div>
 
-            <div className="pitch-footer">
+            <div style={footerStyle}>
               <span>CashIn Pitch Deck</span>
               <span>Slide 2 / 10</span>
             </div>
@@ -275,7 +199,7 @@ export default function PitchDeckPage() {
 
         {/* SLIDE 3: THE SOLUTION */}
         {currentSlide === 2 && (
-          <div className="pitch-slide">
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
               <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
                 SOLUSI KAMI
@@ -286,7 +210,7 @@ export default function PitchDeckPage() {
             </div>
 
             <div className="pitch-grid-3" style={{ margin: "auto 0" }}>
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <span style={{ background: "#D9F99D", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>01. TOKENISASI</span>
                 <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>NFT Hak Tagih ERC-721</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
@@ -294,7 +218,7 @@ export default function PitchDeckPage() {
                 </p>
               </div>
 
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <span style={{ background: "#D1FAE5", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>02. LIKUIDITAS</span>
                 <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>Pencairan Instan di Muka</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
@@ -302,7 +226,7 @@ export default function PitchDeckPage() {
                 </p>
               </div>
 
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <span style={{ background: "#DBEAFE", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>03. SETTLEMENT</span>
                 <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>Pelunasan Otomatis Klien</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
@@ -311,7 +235,7 @@ export default function PitchDeckPage() {
               </div>
             </div>
 
-            <div className="pitch-footer">
+            <div style={footerStyle}>
               <span>CashIn Pitch Deck</span>
               <span>Slide 3 / 10</span>
             </div>
@@ -320,7 +244,7 @@ export default function PitchDeckPage() {
 
         {/* SLIDE 4: HOW IT WORKS */}
         {currentSlide === 3 && (
-          <div className="pitch-slide">
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
               <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
                 ALUR PRODUK
@@ -331,7 +255,7 @@ export default function PitchDeckPage() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "14px", margin: "auto 0" }}>
-              <div className="pitch-card" style={{ display: "flex", gap: "18px", alignItems: "center" }}>
+              <div style={{ ...cardStyle, display: "flex", gap: "18px", alignItems: "center" }}>
                 <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "26px", fontWeight: 900, color: "#EA580C" }}>01</div>
                 <div>
                   <b style={{ fontSize: "15px" }}>Freelancer Terbitkan Invoice Menjadi NFT</b>
@@ -339,7 +263,7 @@ export default function PitchDeckPage() {
                 </div>
               </div>
 
-              <div className="pitch-card" style={{ display: "flex", gap: "18px", alignItems: "center" }}>
+              <div style={{ ...cardStyle, display: "flex", gap: "18px", alignItems: "center" }}>
                 <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "26px", fontWeight: 900, color: "#059669" }}>02</div>
                 <div>
                   <b style={{ fontSize: "15px" }}>Klien Sahkan & Investor Danai di Bursa</b>
@@ -347,7 +271,7 @@ export default function PitchDeckPage() {
                 </div>
               </div>
 
-              <div className="pitch-card" style={{ display: "flex", gap: "18px", alignItems: "center" }}>
+              <div style={{ ...cardStyle, display: "flex", gap: "18px", alignItems: "center" }}>
                 <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "26px", fontWeight: 900, color: "#111827" }}>03</div>
                 <div>
                   <b style={{ fontSize: "15px" }}>Pelunasan Klien Saat Jatuh Tempo</b>
@@ -356,7 +280,7 @@ export default function PitchDeckPage() {
               </div>
             </div>
 
-            <div className="pitch-footer">
+            <div style={footerStyle}>
               <span>CashIn Pitch Deck</span>
               <span>Slide 4 / 10</span>
             </div>
@@ -365,7 +289,7 @@ export default function PitchDeckPage() {
 
         {/* SLIDE 5: SECURITY */}
         {currentSlide === 4 && (
-          <div className="pitch-slide">
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
               <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
                 INOVASI KEAMANAN
@@ -385,7 +309,7 @@ export default function PitchDeckPage() {
                     require(inv.status == InvoiceStatus.Listed)
                   </code>
                 </p>
-                <div className="pitch-card" style={{ background: "#D1FAE5", borderColor: "#059669" }}>
+                <div style={{ ...cardStyle, background: "#D1FAE5", borderColor: "#059669" }}>
                   <b style={{ color: "#065F46", fontSize: "13.5px" }}>✓ Garansi 100% Anti-Double Financing</b>
                   <p style={{ fontSize: "12.5px", color: "#1F2937", marginTop: "4px" }}>
                     Begitu investor pertama mendanai, status terkunci ke <code>Financed</code>. Upaya pendanaan ulang otomatis digagalkan (revert) oleh EVM tanpa kehilangan saldo sepeser pun.
@@ -426,7 +350,7 @@ export default function PitchDeckPage() {
               </table>
             </div>
 
-            <div className="pitch-footer">
+            <div style={footerStyle}>
               <span>CashIn Pitch Deck</span>
               <span>Slide 5 / 10</span>
             </div>
@@ -435,7 +359,7 @@ export default function PitchDeckPage() {
 
         {/* SLIDE 6: MARKET */}
         {currentSlide === 5 && (
-          <div className="pitch-slide">
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
               <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
                 POTENSI PASAR
@@ -446,7 +370,7 @@ export default function PitchDeckPage() {
             </div>
 
             <div className="pitch-grid-3" style={{ margin: "auto 0" }}>
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <div style={{ fontSize: "32px", fontWeight: 900, color: "#EA580C", fontFamily: "var(--mono, monospace)" }}>140M+</div>
                 <b style={{ fontSize: "15px", display: "block", marginTop: "4px", marginBottom: "6px" }}>Pekerja Informal & Gig ASEAN</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
@@ -454,7 +378,7 @@ export default function PitchDeckPage() {
                 </p>
               </div>
 
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <div style={{ fontSize: "32px", fontWeight: 900, color: "#059669", fontFamily: "var(--mono, monospace)" }}>$16T</div>
                 <b style={{ fontSize: "15px", display: "block", marginTop: "4px", marginBottom: "6px" }}>Proyeksi Pasar RWA 2030</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
@@ -462,7 +386,7 @@ export default function PitchDeckPage() {
                 </p>
               </div>
 
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <div style={{ fontSize: "32px", fontWeight: 900, color: "#111827", fontFamily: "var(--mono, monospace)" }}>&lt; $0.001</div>
                 <b style={{ fontSize: "15px", display: "block", marginTop: "4px", marginBottom: "6px" }}>Gas Fee Sangat Murah di Base</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
@@ -471,7 +395,7 @@ export default function PitchDeckPage() {
               </div>
             </div>
 
-            <div className="pitch-footer">
+            <div style={footerStyle}>
               <span>CashIn Pitch Deck</span>
               <span>Slide 6 / 10</span>
             </div>
@@ -480,7 +404,7 @@ export default function PitchDeckPage() {
 
         {/* SLIDE 7: BUSINESS MODEL */}
         {currentSlide === 6 && (
-          <div className="pitch-slide">
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
               <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
                 MODEL BISNIS
@@ -491,7 +415,7 @@ export default function PitchDeckPage() {
             </div>
 
             <div className="pitch-grid-3" style={{ margin: "auto 0" }}>
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <span style={{ background: "#D9F99D", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>ALIRAN 1</span>
                 <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>Biaya Pencairan (0.5% – 1%)</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
@@ -499,7 +423,7 @@ export default function PitchDeckPage() {
                 </p>
               </div>
 
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <span style={{ background: "#D1FAE5", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>ALIRAN 2</span>
                 <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>Biaya Pelunasan (0.25%)</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
@@ -507,7 +431,7 @@ export default function PitchDeckPage() {
                 </p>
               </div>
 
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <span style={{ background: "#DBEAFE", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>ALIRAN 3</span>
                 <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>Kemitraan Platform Gig</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
@@ -516,7 +440,7 @@ export default function PitchDeckPage() {
               </div>
             </div>
 
-            <div className="pitch-footer">
+            <div style={footerStyle}>
               <span>CashIn Pitch Deck</span>
               <span>Slide 7 / 10</span>
             </div>
@@ -525,7 +449,7 @@ export default function PitchDeckPage() {
 
         {/* SLIDE 8: COMPETITIVE ADVANTAGE */}
         {currentSlide === 7 && (
-          <div className="pitch-slide">
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
               <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
                 KEUNGGULAN KOMPETITIF
@@ -574,7 +498,7 @@ export default function PitchDeckPage() {
               </table>
             </div>
 
-            <div className="pitch-footer">
+            <div style={footerStyle}>
               <span>CashIn Pitch Deck</span>
               <span>Slide 8 / 10</span>
             </div>
@@ -583,7 +507,7 @@ export default function PitchDeckPage() {
 
         {/* SLIDE 9: TECH STACK */}
         {currentSlide === 8 && (
-          <div className="pitch-slide">
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
               <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
                 ARSITEKTUR TEKNOLOGI
@@ -594,7 +518,7 @@ export default function PitchDeckPage() {
             </div>
 
             <div className="pitch-grid-3" style={{ margin: "auto 0" }}>
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <b style={{ fontSize: "15px", display: "block", marginBottom: "8px" }}>⛓️ Smart Contracts</b>
                 <ul style={{ fontSize: "12.5px", lineHeight: 1.6, color: "#4B5563", paddingLeft: "16px", margin: 0 }}>
                   <li>Solidity 0.8.28</li>
@@ -604,7 +528,7 @@ export default function PitchDeckPage() {
                 </ul>
               </div>
 
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <b style={{ fontSize: "15px", display: "block", marginBottom: "8px" }}>🌐 Live di Base Sepolia</b>
                 <ul style={{ fontSize: "12.5px", lineHeight: 1.6, color: "#4B5563", paddingLeft: "16px", margin: 0 }}>
                   <li>CairIn: <code>0xf436e...357a</code></li>
@@ -614,7 +538,7 @@ export default function PitchDeckPage() {
                 </ul>
               </div>
 
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <b style={{ fontSize: "15px", display: "block", marginBottom: "8px" }}>💻 Frontend & Deployment</b>
                 <ul style={{ fontSize: "12.5px", lineHeight: 1.6, color: "#4B5563", paddingLeft: "16px", margin: 0 }}>
                   <li>Next.js 16 (App Router) & React 19</li>
@@ -625,7 +549,7 @@ export default function PitchDeckPage() {
               </div>
             </div>
 
-            <div className="pitch-footer">
+            <div style={footerStyle}>
               <span>CashIn Pitch Deck</span>
               <span>Slide 9 / 10</span>
             </div>
@@ -634,7 +558,7 @@ export default function PitchDeckPage() {
 
         {/* SLIDE 10: TEAM & ROADMAP */}
         {currentSlide === 9 && (
-          <div className="pitch-slide">
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
               <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
                 TIM & PETA JALAN
@@ -645,7 +569,7 @@ export default function PitchDeckPage() {
             </div>
 
             <div className="pitch-grid-2" style={{ margin: "auto 0" }}>
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <span style={{ background: "#D9F99D", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>TIM PEMBANGUN</span>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
                   <div>
@@ -659,7 +583,7 @@ export default function PitchDeckPage() {
                 </div>
               </div>
 
-              <div className="pitch-card">
+              <div style={cardStyle}>
                 <span style={{ background: "#D1FAE5", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>ROADMAP</span>
                 <div style={{ fontSize: "12px", color: "#4B5563", lineHeight: 1.6, marginTop: "4px" }}>
                   • <b>Q4 2026:</b> Hackathon MVP & Validasi Smart Contract Base Sepolia.<br />
@@ -670,7 +594,7 @@ export default function PitchDeckPage() {
               </div>
             </div>
 
-            <div className="pitch-footer">
+            <div style={footerStyle}>
               <span>CashIn — Build The Real World Onchain</span>
               <span>Terima Kasih! • cashin-syifamwldas-projects.vercel.app</span>
             </div>
