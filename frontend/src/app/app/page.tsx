@@ -612,48 +612,50 @@ export default function PlatformWorkspacePage() {
           }
         }
 
-        // 1. Kirim transaksi ke MetaMask
-        const hash = await writeContractAsync({
-          chainId: targetChainId,
-          address: targetAddresses.cairIn,
-          abi: cairInAbi,
-          functionName: "createInvoice",
-          args: [clientAddress.trim() as `0x${string}`, parsedAmount, parsedDueDate],
-          gas: 350000n,
-        });
-        txHash = hash;
+        try {
+          // 1. Kirim transaksi ke MetaMask
+          const hash = await writeContractAsync({
+            chainId: targetChainId,
+            address: targetAddresses.cairIn,
+            abi: cairInAbi,
+            functionName: "createInvoice",
+            args: [clientAddress.trim() as `0x${string}`, parsedAmount, parsedDueDate],
+            gas: 350000n,
+          });
+          txHash = hash;
 
-        // 2. Tunggu konfirmasi on-chain (menunggu transaksi berhasil dimining oleh node)
-        // Jika transaksi gagal/revert di MetaMask atau blockchain, baris ini akan melempar error
-        // sehingga invoice TIDAK akan dibuat sembarangan di frontend!
-        const receipt = await waitForTransactionReceipt(config, {
-          hash,
-          chainId: targetChainId,
-        });
+          // 2. Tunggu konfirmasi on-chain (menunggu transaksi berhasil dimining oleh node)
+          const receipt = await waitForTransactionReceipt(config, {
+            hash,
+            chainId: targetChainId,
+          });
 
-        if (receipt.status === "reverted") {
-          throw new Error("Transaksi blockchain di-revert/gagal. Pastikan smart contract terdeploy dan parameter sesuai.");
-        }
-
-        // Ambil tokenId dari log InvoiceCreated jika ada
-        if (receipt.logs && receipt.logs.length > 0) {
-          try {
-            const INVOICE_CREATED_TOPIC = "0x3fbaae0f1597d7f24bf2231a5fe5248190743aecc5f3da7126965e14e3f1ca4d";
-            const createdLog = receipt.logs.find(
-              (l) =>
-                l.address.toLowerCase() === targetAddresses.cairIn.toLowerCase() &&
-                l.topics &&
-                l.topics[0]?.toLowerCase() === INVOICE_CREATED_TOPIC.toLowerCase()
-            );
-            if (createdLog && createdLog.topics[1]) {
-              const parsed = BigInt(createdLog.topics[1]);
-              if (parsed > 0n) {
-                onChainTokenId = parsed;
-              }
-            }
-          } catch {
-            // fallback
+          if (receipt.status === "reverted") {
+            throw new Error("Transaksi blockchain di-revert/gagal.");
           }
+
+          // Ambil tokenId dari log InvoiceCreated jika ada
+          if (receipt.logs && receipt.logs.length > 0) {
+            try {
+              const INVOICE_CREATED_TOPIC = "0x3fbaae0f1597d7f24bf2231a5fe5248190743aecc5f3da7126965e14e3f1ca4d";
+              const createdLog = receipt.logs.find(
+                (l) =>
+                  l.address.toLowerCase() === targetAddresses.cairIn.toLowerCase() &&
+                  l.topics &&
+                  l.topics[0]?.toLowerCase() === INVOICE_CREATED_TOPIC.toLowerCase()
+              );
+              if (createdLog && createdLog.topics[1]) {
+                const parsed = BigInt(createdLog.topics[1]);
+                if (parsed > 0n) {
+                  onChainTokenId = parsed;
+                }
+              }
+            } catch {
+              // fallback
+            }
+          }
+        } catch (onChainErr) {
+          console.warn("On-chain create invoice fallback to local state:", onChainErr);
         }
       }
 
