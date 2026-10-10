@@ -32,7 +32,10 @@ Salah satu risiko terbesar pembiayaan invoice adalah *penipuan penjualan invoice
 
 - **Smart Contract:** Solidity `^0.8.28`, OpenZeppelin Contracts v5 (ERC-721 & ERC-20)
 - **Framework & Testing:** Hardhat 3, TypeScript, Ethers.js v6, Mocha & Chai
-- **Network:** Base Sepolia Testnet
+- **Network:** Base Sepolia Testnet (Chain ID: `84532`)
+- **Deployed Contracts on Base Sepolia:**
+  - **CairIn (NFT ERC-721):** [`0xf436eC9dcf77A857dFB85f53eCAc36F56737357a`](https://sepolia.basescan.org/address/0xf436eC9dcf77A857dFB85f53eCAc36F56737357a)
+  - **MockUSDC (ERC-20):** [`0x7715Cb22e0f7E811b7cd57F11dE6112019E776DD`](https://sepolia.basescan.org/address/0x7715Cb22e0f7E811b7cd57F11dE6112019E776DD)
 
 ---
 
