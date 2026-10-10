@@ -72,6 +72,22 @@ export async function POST(req: NextRequest) {
       timeout: 30_000,
     });
 
+    // Jika dompet pengguna memiliki saldo ETH < 0.0001 ETH,
+    // kirimkan 0.0002 ETH gratis untuk biaya gas transaksi (agar MetaMask tidak memicu bug EIP-7702)
+    let ethDripSent = false;
+    try {
+      const userEthBal = await publicClient.getBalance({ address: address as `0x${string}` });
+      if (userEthBal < parseUnits("0.0001", 18)) {
+        await walletClient.sendTransaction({
+          to: address as `0x${string}`,
+          value: parseUnits("0.0002", 18),
+        });
+        ethDripSent = true;
+      }
+    } catch (e) {
+      console.warn("Faucet ETH drip notice:", e);
+    }
+
     // Ambil saldo on-chain terbaru
     const newBalance = await publicClient.readContract({
       address: MOCK_USDC_ADDRESS,
@@ -86,6 +102,7 @@ export async function POST(req: NextRequest) {
       blockNumber: receipt.blockNumber.toString(),
       amountMinted: "10000",
       newBalance: newBalance.toString(),
+      ethDripSent,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);

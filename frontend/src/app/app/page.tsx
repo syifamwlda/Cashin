@@ -767,7 +767,7 @@ export default function PlatformWorkspacePage() {
       }
 
       alert(
-        `🎉 Berhasil Klaim Faucet!\n\n10,000 MockUSDC telah berhasil masuk ke akun dompet Anda (${formatShortAddress(address)}).\n\nSaldo di platform kini telah terupdate!`
+        `🎉 Berhasil Klaim Faucet!\n\n10,000 MockUSDC dan saldo gas fee ETH telah berhasil masuk ke akun dompet Anda (${formatShortAddress(address)}).\n\nSekarang Anda bisa bertransaksi dengan lancar!`
       );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
