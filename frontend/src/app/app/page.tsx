@@ -212,7 +212,7 @@ export default function PlatformWorkspacePage() {
   const config = useConfig();
 
   const isMounted = useSyncExternalStore(
-    () => () => {},
+    () => () => { },
     () => true,
     () => false
   );
@@ -1644,446 +1644,523 @@ export default function PlatformWorkspacePage() {
           </div>
         </div>
 
-          {/* 3. Modern Transactions & Invoices Table Section (Raxon Design) */}
-          <div className="rx-table-section-card" id="bursa">
-            {/* Table Top Controls Bar */}
-            <div className="rx-table-top-bar">
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                    Recent Transactions & Invoices
-                  </h3>
-                  <span className="rx-pill-badge neutral" style={{ fontSize: "11px" }}>
-                    {filteredInvoices.length} Terdaftar
-                  </span>
-                </div>
-                <p style={{ fontSize: "12px", color: "#64748b", margin: "4px 0 0" }}>
-                  Pantau seluruh tagihan komersial, status likuidasi, dan bukti deliverables secara terpusat.
-                </p>
+        {/* 3. Modern Transactions & Invoices Table Section (Raxon Design) */}
+        <div className="rx-table-section-card" id="bursa">
+          {/* Table Top Controls Bar */}
+          <div className="rx-table-top-bar">
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                  Recent Transactions & Invoices
+                </h3>
+                <span className="rx-pill-badge neutral" style={{ fontSize: "11px" }}>
+                  {filteredInvoices.length} Terdaftar
+                </span>
+              </div>
+              <p style={{ fontSize: "12px", color: "#64748b", margin: "4px 0 0" }}>
+                Pantau seluruh tagihan komersial, status likuidasi, dan bukti deliverables secara terpusat.
+              </p>
+            </div>
+
+            {/* Scope & Role Controls */}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+              <div className="rx-range-pills">
+                <button
+                  type="button"
+                  className={`rx-range-pill-btn ${viewScope === "wallet" ? "active" : ""}`}
+                  onClick={() => setViewScope("wallet")}
+                  suppressHydrationWarning
+                  style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
+                >
+                  <UserIcon size={12} />
+                  <span>Akun Saya {activeConnected && activeAddress ? `(${formatShortAddress(activeAddress)})` : ""}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`rx-range-pill-btn ${viewScope === "all" ? "active" : ""}`}
+                  onClick={() => setViewScope("all")}
+                  suppressHydrationWarning
+                  style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
+                >
+                  <GlobeIcon size={12} />
+                  <span>Bursa Global ({invoices.length})</span>
+                </button>
               </div>
 
-              {/* Scope & Role Controls */}
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+              {activeConnected && viewScope === "wallet" && (
                 <div className="rx-range-pills">
                   <button
                     type="button"
-                    className={`rx-range-pill-btn ${viewScope === "wallet" ? "active" : ""}`}
-                    onClick={() => setViewScope("wallet")}
+                    className={`rx-range-pill-btn ${walletRoleFilter === "all" ? "active" : ""}`}
+                    onClick={() => setWalletRoleFilter("all")}
                     suppressHydrationWarning
-                    style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
                   >
-                    <UserIcon size={12} />
-                    <span>Akun Saya {activeConnected && activeAddress ? `(${formatShortAddress(activeAddress)})` : ""}</span>
+                    Semua
                   </button>
                   <button
                     type="button"
-                    className={`rx-range-pill-btn ${viewScope === "all" ? "active" : ""}`}
-                    onClick={() => setViewScope("all")}
-                    suppressHydrationWarning
-                    style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
+                    className={`rx-range-pill-btn ${walletRoleFilter === "freelancer" ? "active" : ""}`}
+                    onClick={() => setWalletRoleFilter("freelancer")}
                   >
-                    <GlobeIcon size={12} />
-                    <span>Bursa Global ({invoices.length})</span>
+                    Freelancer
+                  </button>
+                  <button
+                    type="button"
+                    className={`rx-range-pill-btn ${walletRoleFilter === "client" ? "active" : ""}`}
+                    onClick={() => setWalletRoleFilter("client")}
+                  >
+                    Klien
                   </button>
                 </div>
+              )}
+            </div>
+          </div>
 
-                {activeConnected && viewScope === "wallet" && (
-                  <div className="rx-range-pills">
+          {/* Table Filter Tabs & Search Bar */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "12px",
+              paddingBottom: "16px",
+              borderBottom: "1px solid #f1f5f9",
+              marginBottom: "12px",
+            }}
+          >
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+              {[
+                { key: "all", label: `Semua (${scopedInvoices.length})` },
+                { key: "draft", label: "Draft" },
+                { key: "approved", label: "Disetujui" },
+                { key: "listed", label: "Di Bursa" },
+                { key: "financed", label: "Didanai" },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setFilterStatus(tab.key as any)}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: "9999px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    background: filterStatus === tab.key ? "#0e3e44" : "#f1f5f9",
+                    color: filterStatus === tab.key ? "#ffffff" : "#475569",
+                    transition: "all 0.15s ease",
+                  }}
+                  suppressHydrationWarning
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "10px",
+                  padding: "5px 12px",
+                }}
+              >
+                <SearchIcon size={13} color="#94a3b8" />
+                <input
+                  type="text"
+                  placeholder="Cari judul atau ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    fontSize: "12px",
+                    outline: "none",
+                    fontFamily: "var(--sans)",
+                    width: "160px",
+                    color: "#0f172a",
+                  }}
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleResetHistory}
+                title="Kembalikan riwayat ke data bawaan"
+                style={{
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "10px",
+                  padding: "6px 12px",
+                  fontSize: "11.5px",
+                  fontWeight: 700,
+                  color: "#64748b",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                <RefreshIcon size={12} color="#64748b" />
+                <span>Reset</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Table Horizontal Scroll Container for responsive protection */}
+          <div className="rx-table-scroll-wrapper">
+            <div className="rx-table-inner">
+              {/* Table Header Row */}
+              <div className="rx-table-header-row">
+                <span>#</span>
+                <span>Rincian Pekerjaan & Pihak</span>
+                <span>Nilai Piutang</span>
+                <span>Harga Bursa</span>
+                <span>Jatuh Tempo</span>
+                <span>24h Trend</span>
+                <span>Status</span>
+                <span style={{ textAlign: "right" }}>Aksi</span>
+              </div>
+
+              {/* Table Rows Body */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                {filteredInvoices.length === 0 ? (
+                  <div
+                    style={{
+                      padding: "48px 24px",
+                      textAlign: "center",
+                      background: "#f8fafc",
+                      borderRadius: "14px",
+                      margin: "8px 0",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}>
+                      <InboxEmptyIcon size={38} color="#94a3b8" />
+                    </div>
+                    <h4 style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a", margin: "0 0 6px" }} suppressHydrationWarning>
+                      {viewScope === "wallet" && activeConnected
+                        ? `Belum Ada Tagihan untuk Akun ${formatShortAddress(activeAddress || "")}`
+                        : "Tidak Ada Invoice yang Cocok"}
+                    </h4>
+                    <p style={{ fontSize: "12.5px", color: "#64748b", maxWidth: "380px", margin: "0 auto 16px" }} suppressHydrationWarning>
+                      {viewScope === "wallet" && activeConnected
+                        ? "Dompet ini belum menerbitkan invoice dan belum menerima tagihan."
+                        : "Ubah kata kunci pencarian atau sesuaikan filter status di atas."}
+                    </p>
                     <button
                       type="button"
-                      className={`rx-range-pill-btn ${walletRoleFilter === "all" ? "active" : ""}`}
-                      onClick={() => setWalletRoleFilter("all")}
-                      suppressHydrationWarning
+                      className="rx-action-btn-primary"
+                      style={{ margin: "0 auto", padding: "8px 18px", fontSize: "12px" }}
+                      onClick={() => setShowCreateModal(true)}
                     >
-                      Semua
-                    </button>
-                    <button
-                      type="button"
-                      className={`rx-range-pill-btn ${walletRoleFilter === "freelancer" ? "active" : ""}`}
-                      onClick={() => setWalletRoleFilter("freelancer")}
-                    >
-                      Freelancer
-                    </button>
-                    <button
-                      type="button"
-                      className={`rx-range-pill-btn ${walletRoleFilter === "client" ? "active" : ""}`}
-                      onClick={() => setWalletRoleFilter("client")}
-                    >
-                      Klien
+                      + Terbitkan Invoice Baru
                     </button>
                   </div>
+                ) : (
+                  filteredInvoices.map((inv, idx) => {
+                    const isSelected = selectedInvoice && inv.id === selectedInvoice.id;
+                    const isUp = inv.status === InvoiceStatus.Financed || inv.status === InvoiceStatus.Listed;
+
+                    return (
+                      <div
+                        key={`row-${inv.id.toString()}-${idx}`}
+                        className={`rx-table-row ${isSelected ? "selected" : ""}`}
+                        onClick={() => setSelectedInvoiceId(inv.id)}
+                      >
+                        {/* Col 1: ID */}
+                        <span
+                          style={{
+                            fontFamily: "var(--mono)",
+                            fontWeight: 800,
+                            fontSize: "11px",
+                            color: "#64748b",
+                          }}
+                        >
+                          #{inv.id.toString().padStart(2, "0")}
+                        </span>
+
+                        {/* Col 2: Job details & Badges */}
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginBottom: "3px" }}>
+                            <b style={{ fontSize: "13px", color: "#0f172a" }}>{inv.jobTitle}</b>
+                            {inv.txHash && (
+                              <span
+                                style={{
+                                  fontFamily: "var(--mono)",
+                                  fontSize: "9px",
+                                  background: "#e0f2fe",
+                                  color: "#0369a1",
+                                  padding: "1px 6px",
+                                  borderRadius: "4px",
+                                  fontWeight: 700,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "3px",
+                                }}
+                              >
+                                <LinkChainIcon size={10} color="#0369a1" /> ON-CHAIN
+                              </span>
+                            )}
+                            {inv.proofImages && inv.proofImages.length > 0 && (
+                              <span
+                                style={{
+                                  fontFamily: "var(--mono)",
+                                  fontSize: "9.5px",
+                                  background: "#ecfdf5",
+                                  color: "#059669",
+                                  padding: "1px 6px",
+                                  borderRadius: "4px",
+                                  border: "1px solid #a7f3d0",
+                                  fontWeight: 700,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                }}
+                              >
+                                <CameraIcon size={11} color="#059669" /> {inv.proofImages.length} Foto
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: "11px", color: "#94a3b8", display: "flex", gap: "10px", alignItems: "center" }}>
+                            <span>Klien: {formatShortAddress(inv.client)}</span>
+                            {activeAddress && inv.freelancer.toLowerCase() === activeAddress.toLowerCase() && (
+                              <span style={{ color: "#d97706", fontWeight: 700 }}>• Anda (Freelancer)</span>
+                            )}
+                            {activeAddress && inv.client.toLowerCase() === activeAddress.toLowerCase() && (
+                              <span style={{ color: "#4f46e5", fontWeight: 700 }}>• Anda (Klien)</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Col 3: Amount */}
+                        <div style={{ fontFamily: "var(--mono)", fontSize: "13px", fontWeight: 800, color: "#0f172a" }}>
+                          {formatCurrency(inv.amount)}
+                        </div>
+
+                        {/* Col 4: Listing Price */}
+                        <div style={{ fontFamily: "var(--mono)", fontSize: "12.5px", fontWeight: 700, color: inv.listingPrice > 0n ? "#0e3e44" : "#94a3b8" }}>
+                          {inv.listingPrice > 0n ? formatCurrency(inv.listingPrice) : "—"}
+                        </div>
+
+                        {/* Col 5: Due Date */}
+                        <div style={{ fontFamily: "var(--mono)", fontSize: "11.5px", color: "#64748b" }}>
+                          {formatDate(inv.dueDate)}
+                        </div>
+
+                        {/* Col 6: Sparkline Trend */}
+                        <div>
+                          <svg width="68" height="22" viewBox="0 0 68 22" fill="none">
+                            <path
+                              d={isUp ? "M2 17 L16 13 L32 15 L48 7 L66 4" : "M2 6 L16 10 L32 8 L48 14 L66 18"}
+                              stroke={isUp ? "#10b981" : "#0e3e44"}
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </div>
+
+                        {/* Col 7: Status Pill */}
+                        <div>
+                          {inv.status === InvoiceStatus.Financed && (
+                            <span className="rx-status-tag financed">DIDANAI</span>
+                          )}
+                          {inv.status === InvoiceStatus.Listed && (
+                            <span className="rx-status-tag listed">DI BURSA</span>
+                          )}
+                          {inv.status === InvoiceStatus.Approved && (
+                            <span className="rx-status-tag approved">DISETUJUI</span>
+                          )}
+                          {inv.status === InvoiceStatus.Created && (
+                            <span className="rx-status-tag created">DRAFT</span>
+                          )}
+                          {inv.status === InvoiceStatus.Paid && (
+                            <span className="rx-status-tag paid">LUNAS</span>
+                          )}
+                        </div>
+
+                        {/* Col 8: Action button */}
+                        <div style={{ textAlign: "right" }}>
+                          <button
+                            type="button"
+                            style={{
+                              background: isSelected ? "#0e3e44" : "#f1f5f9",
+                              color: isSelected ? "#ffffff" : "#1e293b",
+                              border: "none",
+                              borderRadius: "8px",
+                              padding: "6px 12px",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              transition: "all 0.12s",
+                            }}
+                          >
+                            {isSelected ? "Buka ▼" : "Detail →"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>
+          </div>
 
-            {/* Table Filter Tabs & Search Bar */}
+          {/* Detail Invoice & Settlement Drawer / Card */}
+          {selectedInvoice ? (
             <div
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "12px",
-                paddingBottom: "16px",
-                borderBottom: "1px solid #f1f5f9",
-                marginBottom: "12px",
+                marginTop: "24px",
+                padding: "24px",
+                background: "#f8fafc",
+                borderRadius: "16px",
+                border: "1px solid #e2e8f0",
               }}
             >
-              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                {[
-                  { key: "all", label: `Semua (${scopedInvoices.length})` },
-                  { key: "draft", label: "Draft" },
-                  { key: "approved", label: "Disetujui" },
-                  { key: "listed", label: "Di Bursa" },
-                  { key: "financed", label: "Didanai" },
-                ].map((tab) => (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => setFilterStatus(tab.key as any)}
-                    style={{
-                      padding: "6px 14px",
-                      borderRadius: "9999px",
-                      fontSize: "12px",
-                      fontWeight: 700,
-                      border: "none",
-                      cursor: "pointer",
-                      background: filterStatus === tab.key ? "#0e3e44" : "#f1f5f9",
-                      color: filterStatus === tab.key ? "#ffffff" : "#475569",
-                      transition: "all 0.15s ease",
-                    }}
-                    suppressHydrationWarning
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    background: "#f8fafc",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "10px",
-                    padding: "5px 12px",
-                  }}
-                >
-                  <SearchIcon size={13} color="#94a3b8" />
-                  <input
-                    type="text"
-                    placeholder="Cari judul atau ID..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{
-                      border: "none",
-                      background: "transparent",
-                      fontSize: "12px",
-                      outline: "none",
-                      fontFamily: "var(--sans)",
-                      width: "160px",
-                      color: "#0f172a",
-                    }}
-                  />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "18px" }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "4px" }}>
+                    <span style={{ fontFamily: "var(--mono)", fontSize: "14px", fontWeight: 800, color: "#0e3e44" }}>
+                      #INV-{selectedInvoice.id.toString().padStart(3, "0")}
+                    </span>
+                    <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                      {selectedInvoice.jobTitle}
+                    </h3>
+                    {selectedInvoice.status === InvoiceStatus.Financed && (
+                      <span className="rx-status-tag financed">DIDANAI</span>
+                    )}
+                    {selectedInvoice.status === InvoiceStatus.Listed && (
+                      <span className="rx-status-tag listed">DI BURSA</span>
+                    )}
+                    {selectedInvoice.status === InvoiceStatus.Approved && (
+                      <span className="rx-status-tag approved">DISETUJUI</span>
+                    )}
+                    {selectedInvoice.status === InvoiceStatus.Created && (
+                      <span className="rx-status-tag created">DRAFT</span>
+                    )}
+                    {selectedInvoice.status === InvoiceStatus.Paid && (
+                      <span className="rx-status-tag paid">LUNAS</span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: "12px", color: "#64748b", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "4px" }}>
+                    Dibuat oleh: <code style={{ fontFamily: "var(--mono)", color: "#0f172a" }}>{selectedInvoice.freelancer}</code>
+                    <button
+                      type="button"
+                      className={`rx-copy-btn ${copiedField === "freelancer" ? "copied" : ""}`}
+                      onClick={() => handleCopy(selectedInvoice.freelancer, "freelancer")}
+                    >
+                      {copiedField === "freelancer" ? "Tersalin ✓" : "Salin"}
+                    </button>
+                  </span>
                 </div>
 
                 <button
                   type="button"
-                  onClick={handleResetHistory}
-                  title="Kembalikan riwayat ke data bawaan"
+                  onClick={() => setSelectedInvoiceId(null)}
                   style={{
-                    background: "#f8fafc",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "10px",
-                    padding: "6px 12px",
-                    fontSize: "11.5px",
+                    background: "transparent",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "8px",
+                    padding: "4px 10px",
+                    fontSize: "11px",
                     fontWeight: 700,
                     color: "#64748b",
                     cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
                   }}
                 >
-                  <RefreshIcon size={12} color="#64748b" />
-                  <span>Reset</span>
+                  ✕ Tutup Panel
                 </button>
               </div>
-            </div>
 
-            {/* Table Horizontal Scroll Container for responsive protection */}
-            <div className="rx-table-scroll-wrapper">
-              <div className="rx-table-inner">
-                {/* Table Header Row */}
-                <div className="rx-table-header-row">
-                  <span>#</span>
-                  <span>Rincian Pekerjaan & Pihak</span>
-                  <span>Nilai Piutang</span>
-                  <span>Harga Bursa</span>
-                  <span>Jatuh Tempo</span>
-                  <span>24h Trend</span>
-                  <span>Status</span>
-                  <span style={{ textAlign: "right" }}>Aksi</span>
-                </div>
-
-                {/* Table Rows Body */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-              {filteredInvoices.length === 0 ? (
-                <div
-                  style={{
-                    padding: "48px 24px",
-                    textAlign: "center",
-                    background: "#f8fafc",
-                    borderRadius: "14px",
-                    margin: "8px 0",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}>
-                    <InboxEmptyIcon size={38} color="#94a3b8" />
-                  </div>
-                  <h4 style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a", margin: "0 0 6px" }} suppressHydrationWarning>
-                    {viewScope === "wallet" && activeConnected
-                      ? `Belum Ada Tagihan untuk Akun ${formatShortAddress(activeAddress || "")}`
-                      : "Tidak Ada Invoice yang Cocok"}
-                  </h4>
-                  <p style={{ fontSize: "12.5px", color: "#64748b", maxWidth: "380px", margin: "0 auto 16px" }} suppressHydrationWarning>
-                    {viewScope === "wallet" && activeConnected
-                      ? "Dompet ini belum menerbitkan invoice dan belum menerima tagihan."
-                      : "Ubah kata kunci pencarian atau sesuaikan filter status di atas."}
-                  </p>
-                  <button
-                    type="button"
-                    className="rx-action-btn-primary"
-                    style={{ margin: "0 auto", padding: "8px 18px", fontSize: "12px" }}
-                    onClick={() => setShowCreateModal(true)}
-                  >
-                    + Terbitkan Invoice Baru
-                  </button>
-                </div>
-              ) : (
-                filteredInvoices.map((inv, idx) => {
-                  const isSelected = selectedInvoice && inv.id === selectedInvoice.id;
-                  const isUp = inv.status === InvoiceStatus.Financed || inv.status === InvoiceStatus.Listed;
-
-                  return (
-                    <div
-                      key={`row-${inv.id.toString()}-${idx}`}
-                      className={`rx-table-row ${isSelected ? "selected" : ""}`}
-                      onClick={() => setSelectedInvoiceId(inv.id)}
-                    >
-                      {/* Col 1: ID */}
-                      <span
-                        style={{
-                          fontFamily: "var(--mono)",
-                          fontWeight: 800,
-                          fontSize: "11px",
-                          color: "#64748b",
-                        }}
-                      >
-                        #{inv.id.toString().padStart(2, "0")}
-                      </span>
-
-                      {/* Col 2: Job details & Badges */}
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginBottom: "3px" }}>
-                          <b style={{ fontSize: "13px", color: "#0f172a" }}>{inv.jobTitle}</b>
-                          {inv.txHash && (
-                            <span
-                              style={{
-                                fontFamily: "var(--mono)",
-                                fontSize: "9px",
-                                background: "#e0f2fe",
-                                color: "#0369a1",
-                                padding: "1px 6px",
-                                borderRadius: "4px",
-                                fontWeight: 700,
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "3px",
-                              }}
-                            >
-                              <LinkChainIcon size={10} color="#0369a1" /> ON-CHAIN
-                            </span>
-                          )}
-                          {inv.proofImages && inv.proofImages.length > 0 && (
-                            <span
-                              style={{
-                                fontFamily: "var(--mono)",
-                                fontSize: "9.5px",
-                                background: "#ecfdf5",
-                                color: "#059669",
-                                padding: "1px 6px",
-                                borderRadius: "4px",
-                                border: "1px solid #a7f3d0",
-                                fontWeight: 700,
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "4px",
-                              }}
-                            >
-                              <CameraIcon size={11} color="#059669" /> {inv.proofImages.length} Foto
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ fontSize: "11px", color: "#94a3b8", display: "flex", gap: "10px", alignItems: "center" }}>
-                          <span>Klien: {formatShortAddress(inv.client)}</span>
-                          {activeAddress && inv.freelancer.toLowerCase() === activeAddress.toLowerCase() && (
-                            <span style={{ color: "#d97706", fontWeight: 700 }}>• Anda (Freelancer)</span>
-                          )}
-                          {activeAddress && inv.client.toLowerCase() === activeAddress.toLowerCase() && (
-                            <span style={{ color: "#4f46e5", fontWeight: 700 }}>• Anda (Klien)</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Col 3: Amount */}
-                      <div style={{ fontFamily: "var(--mono)", fontSize: "13px", fontWeight: 800, color: "#0f172a" }}>
-                        {formatCurrency(inv.amount)}
-                      </div>
-
-                      {/* Col 4: Listing Price */}
-                      <div style={{ fontFamily: "var(--mono)", fontSize: "12.5px", fontWeight: 700, color: inv.listingPrice > 0n ? "#0e3e44" : "#94a3b8" }}>
-                        {inv.listingPrice > 0n ? formatCurrency(inv.listingPrice) : "—"}
-                      </div>
-
-                      {/* Col 5: Due Date */}
-                      <div style={{ fontFamily: "var(--mono)", fontSize: "11.5px", color: "#64748b" }}>
-                        {formatDate(inv.dueDate)}
-                      </div>
-
-                      {/* Col 6: Sparkline Trend */}
-                      <div>
-                        <svg width="68" height="22" viewBox="0 0 68 22" fill="none">
-                          <path
-                            d={isUp ? "M2 17 L16 13 L32 15 L48 7 L66 4" : "M2 6 L16 10 L32 8 L48 14 L66 18"}
-                            stroke={isUp ? "#10b981" : "#0e3e44"}
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </div>
-
-                      {/* Col 7: Status Pill */}
-                      <div>
-                        {inv.status === InvoiceStatus.Financed && (
-                          <span className="rx-status-tag financed">DIDANAI</span>
-                        )}
-                        {inv.status === InvoiceStatus.Listed && (
-                          <span className="rx-status-tag listed">DI BURSA</span>
-                        )}
-                        {inv.status === InvoiceStatus.Approved && (
-                          <span className="rx-status-tag approved">DISETUJUI</span>
-                        )}
-                        {inv.status === InvoiceStatus.Created && (
-                          <span className="rx-status-tag created">DRAFT</span>
-                        )}
-                        {inv.status === InvoiceStatus.Paid && (
-                          <span className="rx-status-tag paid">LUNAS</span>
-                        )}
-                      </div>
-
-                      {/* Col 8: Action button */}
-                      <div style={{ textAlign: "right" }}>
-                        <button
-                          type="button"
-                          style={{
-                            background: isSelected ? "#0e3e44" : "#f1f5f9",
-                            color: isSelected ? "#ffffff" : "#1e293b",
-                            border: "none",
-                            borderRadius: "8px",
-                            padding: "6px 12px",
-                            fontSize: "11px",
-                            fontWeight: 700,
-                            cursor: "pointer",
-                            transition: "all 0.12s",
-                          }}
-                        >
-                          {isSelected ? "Buka ▼" : "Detail →"}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-              </div>
-            </div>
-
-            {/* Detail Invoice & Settlement Drawer / Card */}
-            {selectedInvoice ? (
+              {/* Grid Rincian Keuangan & Pihak Terlibat */}
               <div
                 style={{
-                  marginTop: "24px",
-                  padding: "24px",
-                  background: "#f8fafc",
-                  borderRadius: "16px",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "14px",
+                  background: "#ffffff",
+                  borderRadius: "12px",
+                  padding: "16px",
                   border: "1px solid #e2e8f0",
+                  marginBottom: "18px",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "18px" }}>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "4px" }}>
-                      <span style={{ fontFamily: "var(--mono)", fontSize: "14px", fontWeight: 800, color: "#0e3e44" }}>
-                        #INV-{selectedInvoice.id.toString().padStart(3, "0")}
-                      </span>
-                      <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                        {selectedInvoice.jobTitle}
-                      </h3>
-                      {selectedInvoice.status === InvoiceStatus.Financed && (
-                        <span className="rx-status-tag financed">DIDANAI</span>
-                      )}
-                      {selectedInvoice.status === InvoiceStatus.Listed && (
-                        <span className="rx-status-tag listed">DI BURSA</span>
-                      )}
-                      {selectedInvoice.status === InvoiceStatus.Approved && (
-                        <span className="rx-status-tag approved">DISETUJUI</span>
-                      )}
-                      {selectedInvoice.status === InvoiceStatus.Created && (
-                        <span className="rx-status-tag created">DRAFT</span>
-                      )}
-                      {selectedInvoice.status === InvoiceStatus.Paid && (
-                        <span className="rx-status-tag paid">LUNAS</span>
-                      )}
-                    </div>
-                    <span style={{ fontSize: "12px", color: "#64748b", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "4px" }}>
-                      Dibuat oleh: <code style={{ fontFamily: "var(--mono)", color: "#0f172a" }}>{selectedInvoice.freelancer}</code>
-                      <button
-                        type="button"
-                        className={`rx-copy-btn ${copiedField === "freelancer" ? "copied" : ""}`}
-                        onClick={() => handleCopy(selectedInvoice.freelancer, "freelancer")}
-                      >
-                        {copiedField === "freelancer" ? "Tersalin ✓" : "Salin"}
-                      </button>
+                <div>
+                  <span style={{ fontSize: "10.5px", fontFamily: "var(--mono)", color: "#94a3b8", display: "block", textTransform: "uppercase", fontWeight: 700, marginBottom: "3px" }}>
+                    ALAMAT KLIEN PEMBAYAR
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "12px", fontFamily: "var(--mono)", fontWeight: 700, color: "#0f172a", wordBreak: "break-all" }}>
+                      {selectedInvoice.client}
                     </span>
+                    <button
+                      type="button"
+                      className={`rx-copy-btn ${copiedField === "client" ? "copied" : ""}`}
+                      onClick={() => handleCopy(selectedInvoice.client, "client")}
+                    >
+                      {copiedField === "client" ? "Tersalin ✓" : "Salin"}
+                    </button>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedInvoiceId(null)}
-                    style={{
-                      background: "transparent",
-                      border: "1px solid #cbd5e1",
-                      borderRadius: "8px",
-                      padding: "4px 10px",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      color: "#64748b",
-                      cursor: "pointer",
-                    }}
-                  >
-                    ✕ Tutup Panel
-                  </button>
                 </div>
 
-                {/* Grid Rincian Keuangan & Pihak Terlibat */}
+                <div>
+                  <span style={{ fontSize: "10.5px", fontFamily: "var(--mono)", color: "#94a3b8", display: "block", textTransform: "uppercase", fontWeight: 700, marginBottom: "3px" }}>
+                    PEMEGANG HAK TAGIH / INVESTOR
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "12px", fontFamily: "var(--mono)", fontWeight: 700, color: "#0f172a" }}>
+                      {selectedInvoice.funder === "0x0000000000000000000000000000000000000000"
+                        ? "Belum ada pendana (Hak tagih di Freelancer)"
+                        : `Investor (${formatShortAddress(selectedInvoice.funder)})`}
+                    </span>
+                    {selectedInvoice.funder !== "0x0000000000000000000000000000000000000000" && (
+                      <button
+                        type="button"
+                        className={`rx-copy-btn ${copiedField === "funder" ? "copied" : ""}`}
+                        onClick={() => handleCopy(selectedInvoice.funder, "funder")}
+                      >
+                        {copiedField === "funder" ? "Tersalin ✓" : "Salin"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: "10.5px", fontFamily: "var(--mono)", color: "#94a3b8", display: "block", textTransform: "uppercase", fontWeight: 700 }}>
+                    NILAI TAGIHAN PIUTANG
+                  </span>
+                  <b style={{ fontSize: "16px", fontFamily: "var(--mono)", color: "#0f172a" }}>
+                    {formatCurrency(selectedInvoice.amount)}
+                  </b>
+                </div>
+
+                {selectedInvoice.listingPrice > 0n && (
+                  <div>
+                    <span style={{ fontSize: "10.5px", fontFamily: "var(--mono)", color: "#94a3b8", display: "block", textTransform: "uppercase", fontWeight: 700 }}>
+                      PENCAIRAN DI MUKA & MARGIN
+                    </span>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "baseline" }}>
+                      <b style={{ fontSize: "15px", fontFamily: "var(--mono)", color: "#059669" }}>
+                        {formatCurrency(selectedInvoice.listingPrice)}
+                      </b>
+                      <span style={{ fontSize: "11px", color: "#c2410c", fontFamily: "var(--mono)", fontWeight: 700 }}>
+                        (Margin: {formatCurrency(selectedInvoice.amount - selectedInvoice.listingPrice)})
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 📷 Galeri Foto Bukti Deliverables Pekerjaan */}
+              {selectedInvoice.proofImages && selectedInvoice.proofImages.length > 0 && (
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: "14px",
                     background: "#ffffff",
                     borderRadius: "12px",
                     padding: "16px",
@@ -2091,553 +2168,476 @@ export default function PlatformWorkspacePage() {
                     marginBottom: "18px",
                   }}
                 >
-                  <div>
-                    <span style={{ fontSize: "10.5px", fontFamily: "var(--mono)", color: "#94a3b8", display: "block", textTransform: "uppercase", fontWeight: 700, marginBottom: "3px" }}>
-                      ALAMAT KLIEN PEMBAYAR
-                    </span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                      <span style={{ fontSize: "12px", fontFamily: "var(--mono)", fontWeight: 700, color: "#0f172a", wordBreak: "break-all" }}>
-                        {selectedInvoice.client}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                        <CameraIcon size={14} color="#0e3e44" /> Bukti Pekerjaan & Dokumen Deliverables
                       </span>
-                      <button
-                        type="button"
-                        className={`rx-copy-btn ${copiedField === "client" ? "copied" : ""}`}
-                        onClick={() => handleCopy(selectedInvoice.client, "client")}
+                      <span className="rx-pill-badge green" style={{ fontSize: "10px", padding: "1px 6px" }}>
+                        {selectedInvoice.proofImages.length} Foto Terverifikasi
+                      </span>
+                    </div>
+                    <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                      Klik foto untuk inspeksi resolusi penuh
+                    </span>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "10px" }}>
+                    {selectedInvoice.proofImages.map((imgUrl, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() =>
+                          setLightboxImage({
+                            url: imgUrl,
+                            title: `Bukti Deliverables #${idx + 1} • ${selectedInvoice.jobTitle}`,
+                          })
+                        }
+                        style={{
+                          aspectRatio: "1",
+                          borderRadius: "10px",
+                          overflow: "hidden",
+                          cursor: "pointer",
+                          position: "relative",
+                          border: "1.5px solid #e2e8f0",
+                          background: "#0f172a",
+                        }}
                       >
-                        {copiedField === "client" ? "Tersalin ✓" : "Salin"}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <span style={{ fontSize: "10.5px", fontFamily: "var(--mono)", color: "#94a3b8", display: "block", textTransform: "uppercase", fontWeight: 700, marginBottom: "3px" }}>
-                      PEMEGANG HAK TAGIH / INVESTOR
-                    </span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                      <span style={{ fontSize: "12px", fontFamily: "var(--mono)", fontWeight: 700, color: "#0f172a" }}>
-                        {selectedInvoice.funder === "0x0000000000000000000000000000000000000000"
-                          ? "Belum ada pendana (Hak tagih di Freelancer)"
-                          : `Investor (${formatShortAddress(selectedInvoice.funder)})`}
-                      </span>
-                      {selectedInvoice.funder !== "0x0000000000000000000000000000000000000000" && (
-                        <button
-                          type="button"
-                          className={`rx-copy-btn ${copiedField === "funder" ? "copied" : ""}`}
-                          onClick={() => handleCopy(selectedInvoice.funder, "funder")}
-                        >
-                          {copiedField === "funder" ? "Tersalin ✓" : "Salin"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <span style={{ fontSize: "10.5px", fontFamily: "var(--mono)", color: "#94a3b8", display: "block", textTransform: "uppercase", fontWeight: 700 }}>
-                      NILAI TAGIHAN PIUTANG
-                    </span>
-                    <b style={{ fontSize: "16px", fontFamily: "var(--mono)", color: "#0f172a" }}>
-                      {formatCurrency(selectedInvoice.amount)}
-                    </b>
-                  </div>
-
-                  {selectedInvoice.listingPrice > 0n && (
-                    <div>
-                      <span style={{ fontSize: "10.5px", fontFamily: "var(--mono)", color: "#94a3b8", display: "block", textTransform: "uppercase", fontWeight: 700 }}>
-                        PENCAIRAN DI MUKA & MARGIN
-                      </span>
-                      <div style={{ display: "flex", gap: "8px", alignItems: "baseline" }}>
-                        <b style={{ fontSize: "15px", fontFamily: "var(--mono)", color: "#059669" }}>
-                          {formatCurrency(selectedInvoice.listingPrice)}
-                        </b>
-                        <span style={{ fontSize: "11px", color: "#c2410c", fontFamily: "var(--mono)", fontWeight: 700 }}>
-                          (Margin: {formatCurrency(selectedInvoice.amount - selectedInvoice.listingPrice)})
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 📷 Galeri Foto Bukti Deliverables Pekerjaan */}
-                {selectedInvoice.proofImages && selectedInvoice.proofImages.length > 0 && (
-                  <div
-                    style={{
-                      background: "#ffffff",
-                      borderRadius: "12px",
-                      padding: "16px",
-                      border: "1px solid #e2e8f0",
-                      marginBottom: "18px",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                          <CameraIcon size={14} color="#0e3e44" /> Bukti Pekerjaan & Dokumen Deliverables
-                        </span>
-                        <span className="rx-pill-badge green" style={{ fontSize: "10px", padding: "1px 6px" }}>
-                          {selectedInvoice.proofImages.length} Foto Terverifikasi
-                        </span>
-                      </div>
-                      <span style={{ fontSize: "11px", color: "#94a3b8" }}>
-                        Klik foto untuk inspeksi resolusi penuh
-                      </span>
-                    </div>
-
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "10px" }}>
-                      {selectedInvoice.proofImages.map((imgUrl, idx) => (
-                        <div
-                          key={idx}
-                          onClick={() =>
-                            setLightboxImage({
-                              url: imgUrl,
-                              title: `Bukti Deliverables #${idx + 1} • ${selectedInvoice.jobTitle}`,
-                            })
-                          }
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imgUrl}
+                          alt={`Bukti #${idx + 1}`}
                           style={{
-                            aspectRatio: "1",
-                            borderRadius: "10px",
-                            overflow: "hidden",
-                            cursor: "pointer",
-                            position: "relative",
-                            border: "1.5px solid #e2e8f0",
-                            background: "#0f172a",
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            transition: "transform 0.2s ease",
                           }}
+                        />
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            background: "rgba(14, 62, 68, 0.4)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            opacity: 0,
+                            transition: "opacity 0.15s ease",
+                            color: "#ffffff",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                          onMouseLeave={(e) => (e.currentTarget.style.opacity = "0")}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={imgUrl}
-                            alt={`Bukti #${idx + 1}`}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                              transition: "transform 0.2s ease",
-                            }}
-                          />
-                          <div
-                            style={{
-                              position: "absolute",
-                              inset: 0,
-                              background: "rgba(14, 62, 68, 0.4)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              opacity: 0,
-                              transition: "opacity 0.15s ease",
-                              color: "#ffffff",
-                              fontSize: "11px",
-                              fontWeight: 700,
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-                            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0")}
-                          >
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                              <ZoomInIcon size={13} color="#ffffff" /> Perbesar
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* On-Chain Record Tx Hash Notification */}
-                {selectedInvoice.txHash && (
-                  <div
-                    style={{
-                      background: "#f0fdf4",
-                      border: "1px solid #bbf7d0",
-                      borderRadius: "10px",
-                      padding: "10px 14px",
-                      marginBottom: "18px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      flexWrap: "wrap",
-                      gap: "8px",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <CheckIcon size={14} color="#166534" />
-                      <span style={{ fontSize: "11.5px", fontWeight: 700, color: "#166534" }}>
-                        Tercatat di Smart Contract Base Sepolia
-                      </span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <code style={{ fontSize: "10.5px", fontFamily: "var(--mono)", color: "#15803d" }}>
-                        {selectedInvoice.txHash}
-                      </code>
-                      <button
-                        type="button"
-                        className={`rx-copy-btn ${copiedField === "txHash" ? "copied" : ""}`}
-                        onClick={() => handleCopy(selectedInvoice.txHash || "", "txHash")}
-                        style={{ padding: "1px 6px", fontSize: "10px" }}
-                      >
-                        {copiedField === "txHash" ? "Tersalin ✓" : "Salin"}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Panel Tindakan Kontrak */}
-                <div
-                  style={{
-                    background: "#ffffff",
-                    borderRadius: "12px",
-                    padding: "18px",
-                    border: "1px solid #e2e8f0",
-                  }}
-                >
-                  <span style={{ fontSize: "11px", fontFamily: "var(--mono)", fontWeight: 800, color: "#64748b", textTransform: "uppercase", display: "block", marginBottom: "10px" }}>
-                    Tindakan Penyelesaian & Protokol
-                  </span>
-
-                  {selectedInvoice.status === InvoiceStatus.Created && (() => {
-                    const isClient = activeAddress && activeAddress.toLowerCase() === selectedInvoice.client.toLowerCase();
-                    const isFreelancer = activeAddress && activeAddress.toLowerCase() === selectedInvoice.freelancer.toLowerCase();
-
-                    if (isClient) {
-                      return (
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-                          <div>
-                            <span className="rx-pill-badge green" style={{ marginBottom: "6px" }}>✓ Terhubung Sebagai Klien</span>
-                            <p style={{ fontSize: "12.5px", color: "#334155", margin: "4px 0 0", maxWidth: "540px" }}>
-                              Sebagai <strong>Klien Pembayar</strong> ({formatShortAddress(selectedInvoice.client)}), periksa bukti deliverables pekerjaan dan tandatangani pengesahan on-chain agar invoice sah ditawarkan ke investor.
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            className="rx-action-btn-primary"
-                            style={{ padding: "10px 22px" }}
-                            onClick={() => handleApproveInvoice(selectedInvoice.id)}
-                          >
-                            Klien Sahkan & Setujui Tagihan →
-                          </button>
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div style={{ background: "#fffbeb", border: "1px solid #fef3c7", borderRadius: "12px", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                          <span style={{ fontSize: "20px" }}>⏳</span>
-                          <div>
-                            <b style={{ fontSize: "13px", color: "#92400e", display: "block" }}>
-                              Menunggu Pengesahan Klien ({formatShortAddress(selectedInvoice.client)})
-                            </b>
-                            <p style={{ fontSize: "12px", color: "#b45309", margin: "2px 0 0", maxWidth: "580px", lineHeight: 1.45 }}>
-                              {isFreelancer
-                                ? `Anda adalah Freelancer pembuat invoice ini (${formatShortAddress(selectedInvoice.freelancer)}). Demi keamanan hak tagih dan pencegahan invoice fiktif, hanya dompet Klien (${formatShortAddress(selectedInvoice.client)}) yang berhak mengesahkan tagihan.`
-                                : `Tagihan ini masih berstatus Draft. Hanya dompet Klien (${formatShortAddress(selectedInvoice.client)}) yang berhak mengesahkan tagihan ini.`}
-                            </p>
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "11px", fontWeight: 700, color: "#92400e", background: "#fef3c7", padding: "6px 12px", borderRadius: "8px", border: "1px solid #fde68a" }}>
-                            🔒 Otorisasi Klien Diperlukan
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                            <ZoomInIcon size={13} color="#ffffff" /> Perbesar
                           </span>
                         </div>
                       </div>
-                    );
-                  })()}
+                    ))}
+                  </div>
+                </div>
+              )}
 
-                  {selectedInvoice.status === InvoiceStatus.Approved && (() => {
-                    const isFreelancer = activeAddress && activeAddress.toLowerCase() === selectedInvoice.freelancer.toLowerCase();
+              {/* On-Chain Record Tx Hash Notification */}
+              {selectedInvoice.txHash && (
+                <div
+                  style={{
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                    borderRadius: "10px",
+                    padding: "10px 14px",
+                    marginBottom: "18px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: "8px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <CheckIcon size={14} color="#166534" />
+                    <span style={{ fontSize: "11.5px", fontWeight: 700, color: "#166534" }}>
+                      Tercatat di Smart Contract Base Sepolia
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <code style={{ fontSize: "10.5px", fontFamily: "var(--mono)", color: "#15803d" }}>
+                      {selectedInvoice.txHash}
+                    </code>
+                    <button
+                      type="button"
+                      className={`rx-copy-btn ${copiedField === "txHash" ? "copied" : ""}`}
+                      onClick={() => handleCopy(selectedInvoice.txHash || "", "txHash")}
+                      style={{ padding: "1px 6px", fontSize: "10px" }}
+                    >
+                      {copiedField === "txHash" ? "Tersalin ✓" : "Salin"}
+                    </button>
+                  </div>
+                </div>
+              )}
 
-                    if (isFreelancer) {
-                      // Perhitungan Tenor Otomatis & Smart Recommendation
-                      const nowSeconds = Math.floor(Date.now() / 1000);
-                      const dueSeconds = Number(selectedInvoice.dueDate);
-                      const diffDays = Math.max(1, Math.round((dueSeconds - nowSeconds) / 86400));
+              {/* Panel Tindakan Kontrak */}
+              <div
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "12px",
+                  padding: "18px",
+                  border: "1px solid #e2e8f0",
+                }}
+              >
+                <span style={{ fontSize: "11px", fontFamily: "var(--mono)", fontWeight: 800, color: "#64748b", textTransform: "uppercase", display: "block", marginBottom: "10px" }}>
+                  Tindakan Penyelesaian & Protokol
+                </span>
 
-                      let recDiscount = 7;
-                      let recTag = "Standar 30 Hari";
-                      let recRationale = "Tenor 1 bulan standar pasar • Imbal hasil seimbang untuk likuiditas Anda & minat investor.";
+                {selectedInvoice.status === InvoiceStatus.Created && (() => {
+                  const isClient = activeAddress && activeAddress.toLowerCase() === selectedInvoice.client.toLowerCase();
+                  const isFreelancer = activeAddress && activeAddress.toLowerCase() === selectedInvoice.freelancer.toLowerCase();
 
-                      if (diffDays <= 18) {
-                        recDiscount = 4;
-                        recTag = "Tenor Singkat (≤14 Hari)";
-                        recRationale = "Perputaran modal sangat cepat • Diskon kecil 4% sudah sangat atraktif bagi investor.";
-                      } else if (diffDays <= 38) {
-                        recDiscount = 7;
-                        recTag = "Standar Pasar (~30 Hari)";
-                        recRationale = "Tenor 1 bulan standar • Rekomendasi 7% ideal untuk menarik pendanaan likuiditas cepat.";
-                      } else if (diffDays <= 52) {
-                        recDiscount = 9;
-                        recTag = "Tenor Menengah (~45 Hari)";
-                        recRationale = "Tenor 1.5 bulan • Rekomendasi 9% mengimbangi waktu tunggu modal investor.";
-                      } else {
-                        recDiscount = 12;
-                        recTag = "Tenor Panjang (≥60 Hari)";
-                        recRationale = "Tenor 2 bulan ke atas • Diskon 12% memberikan yield kompetitif agar invoice lekas didanai.";
-                      }
-
-                      return (
+                  if (isClient) {
+                    return (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
                         <div>
-                          {/* Smart AI / Tenor Recommendation Box */}
-                          <div
-                            style={{
-                              background: "#f0fdfa",
-                              border: "1px solid #ccfbf1",
-                              borderRadius: "10px",
-                              padding: "11px 14px",
-                              marginBottom: "14px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              flexWrap: "wrap",
-                              gap: "10px",
-                            }}
-                          >
-                            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                              <div
-                                style={{
-                                  background: "#ccfbf1",
-                                  padding: "6px",
-                                  borderRadius: "8px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  marginTop: "2px",
-                                  flexShrink: 0,
-                                }}
-                              >
-                                <SparklesIcon size={16} color="#0d9488" />
-                              </div>
-                              <div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                                  <span style={{ fontSize: "12.5px", fontWeight: 800, color: "#0f766e" }}>
-                                    Rekomendasi Cerdas: {recDiscount}% ({recTag})
-                                  </span>
-                                  <span
-                                    style={{
-                                      fontSize: "10px",
-                                      background: "#e0f2fe",
-                                      color: "#0369a1",
-                                      padding: "1px 7px",
-                                      borderRadius: "6px",
-                                      fontWeight: 700,
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: "4px",
-                                    }}
-                                  >
-                                    <ClockTimeIcon size={11} color="#0369a1" /> {diffDays} Hari Tenor
-                                  </span>
-                                </div>
-                                <p style={{ fontSize: "11.5px", color: "#134e4a", margin: "2px 0 0", lineHeight: 1.4, maxWidth: "560px" }}>
-                                  {recRationale}
-                                </p>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setDrawerDiscountPct(recDiscount)}
+                          <span className="rx-pill-badge green" style={{ marginBottom: "6px" }}>✓ Terhubung Sebagai Klien</span>
+                          <p style={{ fontSize: "12.5px", color: "#334155", margin: "4px 0 0", maxWidth: "540px" }}>
+                            Sebagai <strong>Klien Pembayar</strong> ({formatShortAddress(selectedInvoice.client)}), periksa bukti deliverables pekerjaan dan tandatangani pengesahan on-chain agar invoice sah ditawarkan ke investor.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="rx-action-btn-primary"
+                          style={{ padding: "10px 22px" }}
+                          onClick={() => handleApproveInvoice(selectedInvoice.id)}
+                        >
+                          Klien Sahkan & Setujui Tagihan →
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div style={{ background: "#fffbeb", border: "1px solid #fef3c7", borderRadius: "12px", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                        <span style={{ fontSize: "20px" }}>⏳</span>
+                        <div>
+                          <b style={{ fontSize: "13px", color: "#92400e", display: "block" }}>
+                            Menunggu Pengesahan Klien ({formatShortAddress(selectedInvoice.client)})
+                          </b>
+                          <p style={{ fontSize: "12px", color: "#b45309", margin: "2px 0 0", maxWidth: "580px", lineHeight: 1.45 }}>
+                            {isFreelancer
+                              ? `Anda adalah Freelancer pembuat invoice ini (${formatShortAddress(selectedInvoice.freelancer)}). Demi keamanan hak tagih dan pencegahan invoice fiktif, hanya dompet Klien (${formatShortAddress(selectedInvoice.client)}) yang berhak mengesahkan tagihan.`
+                              : `Tagihan ini masih berstatus Draft. Hanya dompet Klien (${formatShortAddress(selectedInvoice.client)}) yang berhak mengesahkan tagihan ini.`}
+                          </p>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#92400e", background: "#fef3c7", padding: "6px 12px", borderRadius: "8px", border: "1px solid #fde68a" }}>
+                          🔒 Otorisasi Klien Diperlukan
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {selectedInvoice.status === InvoiceStatus.Approved && (() => {
+                  const isFreelancer = activeAddress && activeAddress.toLowerCase() === selectedInvoice.freelancer.toLowerCase();
+
+                  if (isFreelancer) {
+                    // Perhitungan Tenor Otomatis & Smart Recommendation
+                    const nowSeconds = Math.floor(Date.now() / 1000);
+                    const dueSeconds = Number(selectedInvoice.dueDate);
+                    const diffDays = Math.max(1, Math.round((dueSeconds - nowSeconds) / 86400));
+
+                    let recDiscount = 7;
+                    let recTag = "Standar 30 Hari";
+                    let recRationale = "Tenor 1 bulan standar pasar • Imbal hasil seimbang untuk likuiditas Anda & minat investor.";
+
+                    if (diffDays <= 18) {
+                      recDiscount = 4;
+                      recTag = "Tenor Singkat (≤14 Hari)";
+                      recRationale = "Perputaran modal sangat cepat • Diskon kecil 4% sudah sangat atraktif bagi investor.";
+                    } else if (diffDays <= 38) {
+                      recDiscount = 7;
+                      recTag = "Standar Pasar (~30 Hari)";
+                      recRationale = "Tenor 1 bulan standar • Rekomendasi 7% ideal untuk menarik pendanaan likuiditas cepat.";
+                    } else if (diffDays <= 52) {
+                      recDiscount = 9;
+                      recTag = "Tenor Menengah (~45 Hari)";
+                      recRationale = "Tenor 1.5 bulan • Rekomendasi 9% mengimbangi waktu tunggu modal investor.";
+                    } else {
+                      recDiscount = 12;
+                      recTag = "Tenor Panjang (≥60 Hari)";
+                      recRationale = "Tenor 2 bulan ke atas • Diskon 12% memberikan yield kompetitif agar invoice lekas didanai.";
+                    }
+
+                    return (
+                      <div>
+                        {/* Smart AI / Tenor Recommendation Box */}
+                        <div
+                          style={{
+                            background: "#f0fdfa",
+                            border: "1px solid #ccfbf1",
+                            borderRadius: "10px",
+                            padding: "11px 14px",
+                            marginBottom: "14px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            flexWrap: "wrap",
+                            gap: "10px",
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                            <div
                               style={{
-                                background: drawerDiscountPct === recDiscount ? "#0d9488" : "#ffffff",
-                                color: drawerDiscountPct === recDiscount ? "#ffffff" : "#0f766e",
-                                border: "1px solid #0d9488",
+                                background: "#ccfbf1",
+                                padding: "6px",
                                 borderRadius: "8px",
-                                padding: "6px 12px",
-                                fontSize: "11px",
-                                fontWeight: 700,
-                                cursor: "pointer",
-                                display: "inline-flex",
+                                display: "flex",
                                 alignItems: "center",
-                                gap: "5px",
-                                transition: "all 0.15s",
+                                justifyContent: "center",
+                                marginTop: "2px",
                                 flexShrink: 0,
                               }}
                             >
-                              <SparklesIcon size={12} color={drawerDiscountPct === recDiscount ? "#ffffff" : "#0d9488"} />
-                              <span>{drawerDiscountPct === recDiscount ? "Terpasang ✓" : `Terapkan ${recDiscount}%`}</span>
-                            </button>
-                          </div>
-
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                            <span style={{ fontSize: "12.5px", color: "#475569" }}>
-                              Tentukan diskon penawaran untuk menarik investor:
-                            </span>
-                            <div style={{ fontFamily: "var(--mono)", fontSize: "12px", fontWeight: 700, color: "#0e3e44" }}>
-                              Diskon: {drawerDiscountPct}% • Estimasi Cair: {(Number(formatUnits(selectedInvoice.amount, 6)) * (100 - drawerDiscountPct) / 100).toFixed(0)} USDC
+                              <SparklesIcon size={16} color="#0d9488" />
+                            </div>
+                            <div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                <span style={{ fontSize: "12.5px", fontWeight: 800, color: "#0f766e" }}>
+                                  Rekomendasi Cerdas: {recDiscount}% ({recTag})
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: "10px",
+                                    background: "#e0f2fe",
+                                    color: "#0369a1",
+                                    padding: "1px 7px",
+                                    borderRadius: "6px",
+                                    fontWeight: 700,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                  }}
+                                >
+                                  <ClockTimeIcon size={11} color="#0369a1" /> {diffDays} Hari Tenor
+                                </span>
+                              </div>
+                              <p style={{ fontSize: "11.5px", color: "#134e4a", margin: "2px 0 0", lineHeight: 1.4, maxWidth: "560px" }}>
+                                {recRationale}
+                              </p>
                             </div>
                           </div>
-                          <input
-                            type="range"
-                            min="2"
-                            max="20"
-                            step="1"
-                            value={drawerDiscountPct}
-                            onChange={(e) => setDrawerDiscountPct(Number(e.target.value))}
-                            style={{ width: "100%", accentColor: "#0e3e44", cursor: "pointer", marginBottom: "14px" }}
-                          />
                           <button
                             type="button"
-                            className="rx-action-btn-primary"
-                            style={{ width: "100%" }}
-                            onClick={() => handleListInvoice(selectedInvoice.id, drawerDiscountPct)}
+                            onClick={() => setDrawerDiscountPct(recDiscount)}
+                            style={{
+                              background: drawerDiscountPct === recDiscount ? "#0d9488" : "#ffffff",
+                              color: drawerDiscountPct === recDiscount ? "#ffffff" : "#0f766e",
+                              border: "1px solid #0d9488",
+                              borderRadius: "8px",
+                              padding: "6px 12px",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "5px",
+                              transition: "all 0.15s",
+                              flexShrink: 0,
+                            }}
                           >
-                            Jual Hak Tagih ke Bursa Sekarang →
+                            <SparklesIcon size={12} color={drawerDiscountPct === recDiscount ? "#ffffff" : "#0d9488"} />
+                            <span>{drawerDiscountPct === recDiscount ? "Terpasang ✓" : `Terapkan ${recDiscount}%`}</span>
                           </button>
                         </div>
-                      );
-                    }
 
-                    return (
-                      <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "12px", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                          <CheckCircleIcon size={20} color="#166534" style={{ flexShrink: 0, marginTop: "2px" }} />
-                          <div>
-                            <b style={{ fontSize: "13px", color: "#166534", display: "block" }}>
-                              Telah Disahkan oleh Klien
-                            </b>
-                            <p style={{ fontSize: "12px", color: "#15803d", margin: "2px 0 0" }}>
-                              Menunggu Freelancer ({formatShortAddress(selectedInvoice.freelancer)}) menentukan diskon dan melisting invoice ke bursa investor.
-                            </p>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                          <span style={{ fontSize: "12.5px", color: "#475569" }}>
+                            Tentukan diskon penawaran untuk menarik investor:
+                          </span>
+                          <div style={{ fontFamily: "var(--mono)", fontSize: "12px", fontWeight: 700, color: "#0e3e44" }}>
+                            Diskon: {drawerDiscountPct}% • Estimasi Cair: {(Number(formatUnits(selectedInvoice.amount, 6)) * (100 - drawerDiscountPct) / 100).toFixed(0)} USDC
                           </div>
                         </div>
-                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#166534", background: "#dcfce7", padding: "6px 12px", borderRadius: "8px" }}>
-                          Menunggu Listing Freelancer
+                        <input
+                          type="range"
+                          min="2"
+                          max="20"
+                          step="1"
+                          value={drawerDiscountPct}
+                          onChange={(e) => setDrawerDiscountPct(Number(e.target.value))}
+                          style={{ width: "100%", accentColor: "#0e3e44", cursor: "pointer", marginBottom: "14px" }}
+                        />
+                        <button
+                          type="button"
+                          className="rx-action-btn-primary"
+                          style={{ width: "100%" }}
+                          onClick={() => handleListInvoice(selectedInvoice.id, drawerDiscountPct)}
+                        >
+                          Jual Hak Tagih ke Bursa Sekarang →
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "12px", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                        <CheckCircleIcon size={20} color="#166534" style={{ flexShrink: 0, marginTop: "2px" }} />
+                        <div>
+                          <b style={{ fontSize: "13px", color: "#166534", display: "block" }}>
+                            Telah Disahkan oleh Klien
+                          </b>
+                          <p style={{ fontSize: "12px", color: "#15803d", margin: "2px 0 0" }}>
+                            Menunggu Freelancer ({formatShortAddress(selectedInvoice.freelancer)}) menentukan diskon dan melisting invoice ke bursa investor.
+                          </p>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: "11px", fontWeight: 700, color: "#166534", background: "#dcfce7", padding: "6px 12px", borderRadius: "8px" }}>
+                        Menunggu Listing Freelancer
+                      </span>
+                    </div>
+                  );
+                })()}
+
+                {selectedInvoice.status === InvoiceStatus.Listed && (() => {
+                  const isFreelancer = activeAddress && activeAddress.toLowerCase() === selectedInvoice.freelancer.toLowerCase();
+
+                  if (isFreelancer) {
+                    return (
+                      <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "12px", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+                        <div>
+                          <b style={{ fontSize: "13px", color: "#9a3412", display: "block" }}>
+                            📢 Tagihan Anda Sedang Aktif di Bursa Global
+                          </b>
+                          <p style={{ fontSize: "12px", color: "#c2410c", margin: "2px 0 0" }}>
+                            Harga penawaran: <b>{formatCurrency(selectedInvoice.listingPrice)}</b>. Smart contract melarang freelancer mendanai tagihannya sendiri (anti-wash trading). Menunggu investor mendanai.
+                          </p>
+                        </div>
+                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#9a3412", background: "#ffedd5", padding: "6px 12px", borderRadius: "8px" }}>
+                          Menunggu Investor
                         </span>
                       </div>
                     );
-                  })()}
+                  }
 
-                  {selectedInvoice.status === InvoiceStatus.Listed && (() => {
-                    const isFreelancer = activeAddress && activeAddress.toLowerCase() === selectedInvoice.freelancer.toLowerCase();
+                  return (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+                      <p style={{ fontSize: "12.5px", color: "#475569", margin: 0 }}>
+                        Tagihan terdaftar di bursa seharga <b>{formatCurrency(selectedInvoice.listingPrice)}</b>. Investor dapat langsung mendanai.
+                      </p>
+                      <button
+                        type="button"
+                        className="rx-action-btn-primary"
+                        style={{ padding: "10px 20px" }}
+                        onClick={() => handleFundInvoice(selectedInvoice.id)}
+                      >
+                        Danai Sebagai Investor →
+                      </button>
+                    </div>
+                  );
+                })()}
 
-                    if (isFreelancer) {
-                      return (
-                        <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "12px", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-                          <div>
-                            <b style={{ fontSize: "13px", color: "#9a3412", display: "block" }}>
-                              📢 Tagihan Anda Sedang Aktif di Bursa Global
-                            </b>
-                            <p style={{ fontSize: "12px", color: "#c2410c", margin: "2px 0 0" }}>
-                              Harga penawaran: <b>{formatCurrency(selectedInvoice.listingPrice)}</b>. Smart contract melarang freelancer mendanai tagihannya sendiri (anti-wash trading). Menunggu investor mendanai.
-                            </p>
-                          </div>
-                          <span style={{ fontSize: "11px", fontWeight: 700, color: "#9a3412", background: "#ffedd5", padding: "6px 12px", borderRadius: "8px" }}>
-                            Menunggu Investor
-                          </span>
-                        </div>
-                      );
-                    }
+                {selectedInvoice.status === InvoiceStatus.Financed && (() => {
+                  const isClient = activeAddress && activeAddress.toLowerCase() === selectedInvoice.client.toLowerCase();
 
+                  if (isClient) {
                     return (
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-                        <p style={{ fontSize: "12.5px", color: "#475569", margin: 0 }}>
-                          Tagihan terdaftar di bursa seharga <b>{formatCurrency(selectedInvoice.listingPrice)}</b>. Investor dapat langsung mendanai.
-                        </p>
+                        <div>
+                          <span className="rx-pill-badge green" style={{ marginBottom: "6px" }}>Kewajiban Pelunasan</span>
+                          <p style={{ fontSize: "12.5px", color: "#334155", margin: "2px 0 0" }}>
+                            Sebagai Klien pembayar ({formatShortAddress(selectedInvoice.client)}), lunasi nilai penuh tagihan <b>{formatCurrency(selectedInvoice.amount)}</b> ke pemegang NFT (investor).
+                          </p>
+                        </div>
                         <button
                           type="button"
                           className="rx-action-btn-primary"
                           style={{ padding: "10px 20px" }}
-                          onClick={() => handleFundInvoice(selectedInvoice.id)}
+                          onClick={() => handlePayInvoice(selectedInvoice.id)}
                         >
-                          Danai Sebagai Investor →
+                          Klien Lunasi Tagihan (Jatuh Tempo) →
                         </button>
                       </div>
                     );
-                  })()}
+                  }
 
-                  {selectedInvoice.status === InvoiceStatus.Financed && (() => {
-                    const isClient = activeAddress && activeAddress.toLowerCase() === selectedInvoice.client.toLowerCase();
-
-                    if (isClient) {
-                      return (
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-                          <div>
-                            <span className="rx-pill-badge green" style={{ marginBottom: "6px" }}>Kewajiban Pelunasan</span>
-                            <p style={{ fontSize: "12.5px", color: "#334155", margin: "2px 0 0" }}>
-                              Sebagai Klien pembayar ({formatShortAddress(selectedInvoice.client)}), lunasi nilai penuh tagihan <b>{formatCurrency(selectedInvoice.amount)}</b> ke pemegang NFT (investor).
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            className="rx-action-btn-primary"
-                            style={{ padding: "10px 20px" }}
-                            onClick={() => handlePayInvoice(selectedInvoice.id)}
-                          >
-                            Klien Lunasi Tagihan (Jatuh Tempo) →
-                          </button>
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-                        <p style={{ fontSize: "12.5px", color: "#475569", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
-                          <LockIcon size={14} color="#0e3e44" />
-                          <span><strong>Terkunci:</strong> Dana talangan telah cair ke freelancer. Menunggu Klien ({formatShortAddress(selectedInvoice.client)}) melunasi saat jatuh tempo.</span>
-                        </p>
-                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", background: "#f1f5f9", padding: "6px 12px", borderRadius: "8px" }}>
-                          Terkunci di Escrow
-                        </span>
-                      </div>
-                    );
-                  })()}
-
-                  {selectedInvoice.status === InvoiceStatus.Paid && (
-                    <div
-                      style={{
-                        background: "#ecfdf5",
-                        padding: "14px",
-                        borderRadius: "10px",
-                        textAlign: "center",
-                        fontWeight: 800,
-                        fontSize: "13px",
-                        color: "#059669",
-                        border: "1px solid #a7f3d0",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      <CheckCircleIcon size={16} color="#059669" />
-                      <span>LUNAS • SELURUH KEWAJIBAN & IMBAL HASIL SELESAI PENUH</span>
+                  return (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+                      <p style={{ fontSize: "12.5px", color: "#475569", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                        <LockIcon size={14} color="#0e3e44" />
+                        <span><strong>Terkunci:</strong> Dana talangan telah cair ke freelancer. Menunggu Klien ({formatShortAddress(selectedInvoice.client)}) melunasi saat jatuh tempo.</span>
+                      </p>
+                      <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", background: "#f1f5f9", padding: "6px 12px", borderRadius: "8px" }}>
+                        Terkunci di Escrow
+                      </span>
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
+
+                {selectedInvoice.status === InvoiceStatus.Paid && (
+                  <div
+                    style={{
+                      background: "#ecfdf5",
+                      padding: "14px",
+                      borderRadius: "10px",
+                      textAlign: "center",
+                      fontWeight: 800,
+                      fontSize: "13px",
+                      color: "#059669",
+                      border: "1px solid #a7f3d0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <CheckCircleIcon size={16} color="#059669" />
+                    <span>LUNAS • SELURUH KEWAJIBAN & IMBAL HASIL SELESAI PENUH</span>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div
+            </div>
+          ) : (
+            <div
+              style={{
+                marginTop: "16px",
+                padding: "12px 18px",
+                background: "#f8fafc",
+                borderRadius: "12px",
+                border: "1px dashed #cbd5e1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                fontSize: "12px",
+                color: "#64748b",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <ZapIcon size={14} color="#0e3e44" style={{ flexShrink: 0 }} />
+                <span><strong>Tips:</strong> Klik baris transaksi di atas untuk menginspeksi rincian kontrak & galeri bukti deliverables.</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(true)}
                 style={{
-                  marginTop: "16px",
-                  padding: "12px 18px",
-                  background: "#f8fafc",
-                  borderRadius: "12px",
-                  border: "1px dashed #cbd5e1",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  fontSize: "12px",
-                  color: "#64748b",
+                  background: "#0e3e44",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "6px 12px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontSize: "11.5px",
                 }}
               >
-                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <ZapIcon size={14} color="#0e3e44" style={{ flexShrink: 0 }} />
-                  <span><strong>Tips:</strong> Klik baris transaksi di atas untuk menginspeksi rincian kontrak & galeri bukti deliverables.</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(true)}
-                  style={{
-                    background: "#0e3e44",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: "8px",
-                    padding: "6px 12px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    fontSize: "11.5px",
-                  }}
-                >
-                  + Terbitkan Invoice
-                </button>
-              </div>
-            )}
-          </div>
+                + Terbitkan Invoice
+              </button>
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Footer Minimalist Raxon Style */}
@@ -2876,9 +2876,9 @@ export default function PlatformWorkspacePage() {
                     disabled={uploadedImages.length >= 4}
                     style={{ display: "none" }}
                   />
-                    <div style={{ display: "flex", justifyContent: "center", marginBottom: "6px" }}>
-                      <UploadIcon size={26} color="#0e3e44" />
-                    </div>
+                  <div style={{ display: "flex", justifyContent: "center", marginBottom: "6px" }}>
+                    <UploadIcon size={26} color="#0e3e44" />
+                  </div>
                   <b style={{ fontSize: "12.5px", display: "block", color: "#0f172a" }}>
                     {uploadedImages.length >= 4 ? "Maksimal 4 Foto Terunggah" : "Pilih / Seret Foto Bukti dari Perangkat"}
                   </b>
