@@ -1,6 +1,6 @@
 {
   "_format": "hh3-sol-build-info-1",
-  "id": "solc-0_8_34-04e5e0581aa9574cb34a3b42da6b4593d0657507",
+  "id": "solc-0_8_34-9094ffaf75e7a95cf40c1d517ed35ccdd6fbb3e8",
   "solcVersion": "0.8.34",
   "solcLongVersion": "0.8.34+commit.80d5c536",
   "compilerType": "solc",
@@ -59,7 +59,7 @@
         "content": "// SPDX-License-Identifier: MIT\n// OpenZeppelin Contracts (last updated v5.0.1) (utils/Context.sol)\n\npragma solidity ^0.8.20;\n\n/**\n * @dev Provides information about the current execution context, including the\n * sender of the transaction and its data. While these are generally available\n * via msg.sender and msg.data, they should not be accessed in such a direct\n * manner, since when dealing with meta-transactions the account sending and\n * paying for execution may not be the actual sender (as far as an application\n * is concerned).\n *\n * This contract is only required for intermediate, library-like contracts.\n */\nabstract contract Context {\n    function _msgSender() internal view virtual returns (address) {\n        return msg.sender;\n    }\n\n    function _msgData() internal view virtual returns (bytes calldata) {\n        return msg.data;\n    }\n\n    function _contextSuffixLength() internal view virtual returns (uint256) {\n        return 0;\n    }\n}\n"
       },
       "project/contracts/MockUSDC.sol": {
-        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.28;\n\nimport \"@openzeppelin/contracts/token/ERC20/ERC20.sol\";\n\n/**\n * @title MockUSDC\n * @notice Token tiruan (mock) USDC untuk pengujian dan demo CairIn.\n * Memiliki 6 desimal sama seperti USDC asli di Base dan Ethereum.\n */\ncontract MockUSDC is ERC20 {\n    constructor() ERC20(\"Mock USD Coin\", \"USDC\") {}\n\n    function decimals() public pure override returns (uint8) {\n        return 6;\n    }\n\n    /**\n     * @notice Fungsi mint bebas untuk simulasi & pengujian (testing).\n     */\n    function mint(address to, uint256 amount) external {\n        _mint(to, amount);\n    }\n}\n"
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.28;\r\n\r\nimport \"@openzeppelin/contracts/token/ERC20/ERC20.sol\";\r\n\r\n/**\r\n * @title MockUSDC\r\n * @notice Token tiruan (mock) USDC untuk pengujian dan demo CairIn.\r\n * Memiliki 6 desimal sama seperti USDC asli di Base dan Ethereum.\r\n */\r\ncontract MockUSDC is ERC20 {\r\n    constructor() ERC20(\"Mock USD Coin\", \"USDC\") {}\r\n\r\n    function decimals() public pure override returns (uint8) {\r\n        return 6;\r\n    }\r\n\r\n    /**\r\n     * @notice Fungsi mint bebas untuk simulasi & pengujian (testing).\r\n     */\r\n    function mint(address to, uint256 amount) external {\r\n        _mint(to, amount);\r\n    }\r\n}\r\n"
       }
     }
   }

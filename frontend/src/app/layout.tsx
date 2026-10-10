@@ -3,7 +3,7 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CairIn — Platform Pembiayaan Invoice Freelancer",
+  title: "CashIn — Platform Pembiayaan Invoice Freelancer",
   description:
     "Cairkan piutang invoice Anda lebih cepat ke investor melalui NFT ERC-721 di Base Sepolia.",
 };

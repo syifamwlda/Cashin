@@ -1,9 +1,9 @@
-# CairIn - Platform Invoice Financing RWA untuk Freelancer 🚀
+# CashIn - Platform Invoice Financing RWA untuk Freelancer 🚀
 
 > **Ethereum Jakarta Hackathon 2026** — Kategori Real World Assets (RWA)  
 > Jaringan Target: Base Sepolia Testnet
 
-CairIn adalah platform Web3 yang membantu freelancer mencairkan piutang invoice lebih cepat tanpa menunggu waktu jatuh tempo 30–60 hari dari klien. Invoice riil dicetak sebagai **NFT (ERC-721)** dan dapat didanai oleh investor (funder) dengan harga diskon.
+CashIn adalah platform Web3 yang membantu freelancer mencairkan piutang invoice lebih cepat tanpa menunggu waktu jatuh tempo 30–60 hari dari klien. Invoice riil dicetak sebagai **NFT (ERC-721)** dan dapat didanai oleh investor (funder) dengan harga diskon.
 
 ---
 
@@ -21,7 +21,7 @@ CairIn adalah platform Web3 yang membantu freelancer mencairkan piutang invoice 
 
 ## 🛡️ Fitur Keamanan Kunci: Anti-Double Funding
 
-Salah satu risiko terbesar pembiayaan invoice adalah *penipuan penjualan invoice ganda*. Di CairIn:
+Salah satu risiko terbesar pembiayaan invoice adalah *penipuan penjualan invoice ganda*. Di CashIn:
 - Status invoice disimpan di state blockchain.
 - Saat Funder pertama memanggil fungsi `buyInvoice`, status berubah seketika menjadi `Financed` dan NFT ditransfer.
 - Funder lain yang mencoba membeli invoice yang sama akan **langsung ditolak (revert)** oleh smart contract dengan pesan error: `Invoice is not listed for financing`.
