@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 
 export default function PitchDeckPage() {
@@ -33,7 +33,7 @@ export default function PitchDeckPage() {
       <header className="deck-toolbar" style={{ width: "min(1080px, 100%)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--paper)", border: "2px solid var(--ink)", boxShadow: "6px 6px 0 var(--ink)", padding: "12px 20px", marginBottom: "16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 900, fontSize: "16px" }}>
           <Link href="/" style={{ textDecoration: "none", color: "inherit" }}>
-            CAIRIN SLIDE DECK
+            CASHIN SLIDE DECK
           </Link>
           <span style={{ background: "var(--ink)", color: "var(--paper)", fontSize: "11px", padding: "2px 8px", fontFamily: "var(--mono)", fontWeight: 700 }}>
             RWA ON BASE
@@ -63,36 +63,36 @@ export default function PitchDeckPage() {
         {currentSlide === 0 && (
           <div className="slide active" style={{ display: "flex", width: "100%", height: "100%", padding: "44px 56px", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
-              <div className="slide-eyebrow">ETHEREUM JAKARTA HACKATHON 2026 • RWA FACTORING</div>
+              <div className="slide-eyebrow">ETHEREUM JAKARTA HACKATHON 2026 • RWA PROTOCOL</div>
               <h1 style={{ fontSize: "clamp(44px, 5.5vw, 68px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: "16px" }}>
-                CAIRIN
+                CashIn
               </h1>
-              <p style={{ fontSize: "24px", fontWeight: 800, color: "var(--cairin-green)", marginBottom: "20px" }}>
-                Ubah Piutang 30 Hari Menjadi Kas Hari Ini. Tanpa Bunga, Tanpa Ribet.
+              <p style={{ fontSize: "22px", fontWeight: 800, color: "var(--cairin-green)", marginBottom: "20px" }}>
+                Cairkan Invoice Freelance Lebih Cepat. Ubah Piutang Jadi Kas Instan.
               </p>
-              <p style={{ fontSize: "15.5px", color: "#444", maxWidth: "680px", lineHeight: 1.5 }}>
-                Platform anjak piutang terdesentralisasi (Decentralized Invoice Financing) berbasis tokenisasi NFT ERC-721 di jaringan Base Sepolia.
+              <p style={{ fontSize: "15px", color: "#444", maxWidth: "680px", lineHeight: 1.5 }}>
+                Platform anjak piutang mikro (RWA Invoice Factoring) berbasis NFT ERC-721 di jaringan Base Sepolia. Memberikan modal kerja instan tanpa utang pinjol.
               </p>
             </div>
 
             <div className="grid-3" style={{ marginTop: "24px" }}>
               <div className="card" style={{ background: "var(--cairin-acid)" }}>
                 <div style={{ fontFamily: "var(--mono)", fontSize: "11px", fontWeight: 800 }}>TARGET PENGGUNA</div>
-                <b style={{ fontSize: "16px" }}>Pekerja Lepas & Agensi Digital</b>
+                <b style={{ fontSize: "15px" }}>Pekerja Lepas & Agensi Digital</b>
               </div>
               <div className="card" style={{ background: "var(--cairin-mint)" }}>
                 <div style={{ fontFamily: "var(--mono)", fontSize: "11px", fontWeight: 800 }}>INSTRUMEN RWA</div>
-                <b style={{ fontSize: "16px" }}>NFT ERC-721 + Settlement USDC</b>
+                <b style={{ fontSize: "15px" }}>NFT ERC-721 + Settlement USDC</b>
               </div>
               <div className="card" style={{ background: "#DBEAFE" }}>
                 <div style={{ fontFamily: "var(--mono)", fontSize: "11px", fontWeight: 800 }}>JARINGAN BLOCKCHAIN</div>
-                <b style={{ fontSize: "16px" }}>Base Sepolia (L2 Ethereum)</b>
+                <b style={{ fontSize: "15px" }}>Base Sepolia (Ethereum L2)</b>
               </div>
             </div>
 
             <div className="slide-footer">
-              <span>Presenter: Syifa Maulida & Tim CairIn</span>
-              <span>github.com/syifamwlda/Cashin</span>
+              <span>Tim: Syifa Maulida (Product/Frontend) & Sultan Saladin (Smart Contract)</span>
+              <span>cashin-syifamwldas-projects.vercel.app</span>
             </div>
           </div>
         )}
@@ -130,13 +130,13 @@ export default function PitchDeckPage() {
               <div className="card" style={{ borderLeft: "6px solid var(--cairin-red)" }}>
                 <div className="card-title">🛑 Risiko Faktur Ganda di TradFi</div>
                 <p className="card-desc">
-                  Pada perbankan tradisional, risiko terbesar adalah satu faktur difotokopi dan dijual berulang kali ke beberapa pemodal berbeda (*double factoring*).
+                  Pada perbankan tradisional, risiko terbesar adalah satu faktur difotokopi dan dijual berulang kali ke beberapa pemodal berbeda (double factoring).
                 </p>
               </div>
             </div>
 
             <div className="slide-footer">
-              <span>CairIn Pitch Deck</span>
+              <span>CashIn Pitch Deck</span>
               <span>Slide 2 / 10</span>
             </div>
           </div>
@@ -177,7 +177,7 @@ export default function PitchDeckPage() {
             </div>
 
             <div className="slide-footer">
-              <span>CairIn Pitch Deck</span>
+              <span>CashIn Pitch Deck</span>
               <span>Slide 3 / 10</span>
             </div>
           </div>
@@ -196,7 +196,7 @@ export default function PitchDeckPage() {
                 <div style={{ fontFamily: "var(--mono)", fontSize: "28px", fontWeight: 900, color: "var(--cairin-orange)" }}>01</div>
                 <div>
                   <b>Freelancer Terbitkan Invoice</b>
-                  <p style={{ fontSize: "13px", color: "#555" }}>Memasukkan nominal USDC, alamat dompet klien, dan tanggal jatuh tempo. Smart contract mencetak NFT (Status: <code>Draft</code>).</p>
+                  <p style={{ fontSize: "13px", color: "#555" }}>Memasukkan nominal USDC, alamat klien, dan tanggal jatuh tempo. Smart contract mencetak NFT (Status: <code>Draft</code>).</p>
                 </div>
               </div>
 
@@ -218,7 +218,7 @@ export default function PitchDeckPage() {
             </div>
 
             <div className="slide-footer">
-              <span>CairIn Pitch Deck</span>
+              <span>CashIn Pitch Deck</span>
               <span>Slide 4 / 10</span>
             </div>
           </div>
@@ -236,7 +236,7 @@ export default function PitchDeckPage() {
               <div>
                 <h3 style={{ fontSize: "18px", fontWeight: 800, marginBottom: "12px" }}>State Machine Smart Contract</h3>
                 <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#444", marginBottom: "16px" }}>
-                  Fungsi <code>fundInvoice</code> pada smart contract CairIn secara mutlak mewajibkan kondisi status:
+                  Fungsi <code>buyInvoice</code> pada smart contract CashIn secara mutlak mewajibkan kondisi status:
                   <br />
                   <code style={{ fontFamily: "var(--mono)", background: "#E5E1D6", padding: "2px 6px", fontSize: "12px", fontWeight: 700 }}>
                     require(inv.status == InvoiceStatus.Listed)
@@ -284,7 +284,7 @@ export default function PitchDeckPage() {
             </div>
 
             <div className="slide-footer">
-              <span>CairIn Pitch Deck</span>
+              <span>CashIn Pitch Deck</span>
               <span>Slide 5 / 10</span>
             </div>
           </div>
@@ -311,7 +311,7 @@ export default function PitchDeckPage() {
                 <div style={{ fontSize: "32px", fontWeight: 900, color: "var(--cairin-green)", fontFamily: "var(--mono)" }}>$16T</div>
                 <div className="card-title">Proyeksi Pasar RWA 2030</div>
                 <p className="card-desc">
-                  Sektor tokenisasi aset dunia nyata (RWA Private Credit) bertumbuh pesat karena investor Web3 mencari imbal hasil nyata dan stabil.
+                  Sektor tokenisasi aset dunia nyata (RWA Private Credit) bertumbuh eksponensial karena investor Web3 mencari imbal hasil nyata dan stabil.
                 </p>
               </div>
 
@@ -325,7 +325,7 @@ export default function PitchDeckPage() {
             </div>
 
             <div className="slide-footer">
-              <span>CairIn Pitch Deck</span>
+              <span>CashIn Pitch Deck</span>
               <span>Slide 6 / 10</span>
             </div>
           </div>
@@ -358,15 +358,15 @@ export default function PitchDeckPage() {
 
               <div className="card">
                 <span className="badge-pill" style={{ background: "#DBEAFE" }}>ALIRAN 3</span>
-                <div className="card-title">Enterprise API & SLA</div>
+                <div className="card-title">Kemitraan Platform Gig</div>
                 <p className="card-desc">
-                  Langganan integrasi otomatis ERP / software akuntansi untuk agensi besar dan korporasi yang menerbitkan puluhan faktur per bulan.
+                  Integrasi API dengan platform freelance lokal untuk auto-verifikasi deliverables dan bagi hasil komisi.
                 </p>
               </div>
             </div>
 
             <div className="slide-footer">
-              <span>CairIn Pitch Deck</span>
+              <span>CashIn Pitch Deck</span>
               <span>Slide 7 / 10</span>
             </div>
           </div>
@@ -376,8 +376,8 @@ export default function PitchDeckPage() {
         {currentSlide === 7 && (
           <div className="slide active" style={{ display: "flex", width: "100%", height: "100%", padding: "44px 56px", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
-              <div className="slide-eyebrow">KOMPARASI KOMPETITIF</div>
-              <h2 className="slide-heading">Mengapa CairIn <em>Unggul Dibandingkan Alternatif Lain?</em></h2>
+              <div className="slide-eyebrow">KEUNGGULAN KOMPETITIF</div>
+              <h2 className="slide-heading">Mengapa CashIn <em>Jauh Lebih Unggul?</em></h2>
             </div>
 
             <div className="slide-body">
@@ -385,29 +385,29 @@ export default function PitchDeckPage() {
                 <thead>
                   <tr>
                     <th>Fitur / Parameter</th>
-                    <th>Bank Tradisional</th>
-                    <th>Pinjaman Online (Pinjol)</th>
-                    <th style={{ background: "var(--cairin-acid)" }}>CAIRIN (RWA Web3)</th>
+                    <th>P2P / Factoring Konvensional</th>
+                    <th>Pinjol Konsumtif</th>
+                    <th style={{ background: "var(--cairin-acid)" }}>CashIn (RWA Base)</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td><b>Waktu Pencairan</b></td>
-                    <td>2–4 minggu proses berkas</td>
-                    <td>1–2 hari kerja</td>
-                    <td style={{ background: "#F4F9D8" }}><b>Detik (Instan di Blockchain)</b></td>
+                    <td>3 – 14 hari kerja (verifikasi manual)</td>
+                    <td>1 hari</td>
+                    <td style={{ background: "#F4F9D8" }}><b>Detik itu juga (On-chain)</b></td>
                   </tr>
                   <tr>
                     <td><b>Struktur Finansial</b></td>
-                    <td>Utang berbunga</td>
+                    <td>Utang berbunga majemuk</td>
                     <td>Bunga tinggi (20–30%/bln)</td>
-                    <td style={{ background: "#F4F9D8" }}><b>Bukan utang (Jual-beli diskon)</b></td>
+                    <td style={{ background: "#F4F9D8" }}><b>Bukan utang (Jual diskon wajar 5-10%)</b></td>
                   </tr>
                   <tr>
                     <td><b>Persyaratan Agunan</b></td>
                     <td>Sertifikat tanah / aset fisik</td>
                     <td>Akses kontak & data pribadi</td>
-                    <td style={{ background: "#F4F9D8" }}><b>Tanpa agunan (Validasi klien)</b></td>
+                    <td style={{ background: "#F4F9D8" }}><b>Tanpa agunan (NFT hak tagih sah)</b></td>
                   </tr>
                   <tr>
                     <td><b>Proteksi Piutang Ganda</b></td>
@@ -420,7 +420,7 @@ export default function PitchDeckPage() {
             </div>
 
             <div className="slide-footer">
-              <span>CairIn Pitch Deck</span>
+              <span>CashIn Pitch Deck</span>
               <span>Slide 8 / 10</span>
             </div>
           </div>
@@ -439,74 +439,77 @@ export default function PitchDeckPage() {
                 <div className="card-title">⛓️ Smart Contracts</div>
                 <ul style={{ fontSize: "13px", lineHeight: "1.6", color: "#444", paddingLeft: "18px" }}>
                   <li>Solidity 0.8.28</li>
-                  <li>Hardhat 3 Tooling</li>
-                  <li>OpenZeppelin ERC-721 & ReentrancyGuard</li>
-                  <li>100% Test Coverage</li>
+                  <li>OpenZeppelin ERC-721 & ERC-20</li>
+                  <li>Hardhat 3 Tooling + TypeChain</li>
+                  <li>100% Automated Test Passing</li>
                 </ul>
               </div>
 
               <div className="card">
-                <div className="card-title">🌐 Base Sepolia L2</div>
+                <div className="card-title">🌐 Live di Base Sepolia</div>
                 <ul style={{ fontSize: "13px", lineHeight: "1.6", color: "#444", paddingLeft: "18px" }}>
-                  <li>Didukung ekosistem Coinbase</li>
-                  <li>Biaya gas mikro (&lt; Rp100)</li>
-                  <li>Finalitas transaksi sub-detik</li>
+                  <li>CairIn: <code>0xf436e...357a</code></li>
+                  <li>MockUSDC: <code>0x7715C...76DD</code></li>
+                  <li>Gas fee mikro (&lt; Rp100)</li>
                   <li>Settlement USDC Stablecoin</li>
                 </ul>
               </div>
 
               <div className="card">
-                <div className="card-title">💻 Frontend Modular</div>
+                <div className="card-title">💻 Frontend & Deployment</div>
                 <ul style={{ fontSize: "13px", lineHeight: "1.6", color: "#444", paddingLeft: "18px" }}>
-                  <li>Next.js 16 (App Router)</li>
-                  <li>Wagmi v2 & Viem Web3</li>
-                  <li>TanStack React Query</li>
-                  <li>Pemisahan Landing Page & Workspace</li>
+                  <li>Next.js 16 (App Router) & React 19</li>
+                  <li>Wagmi v2 & Viem Web3 Connect</li>
+                  <li>Production Live di Vercel</li>
+                  <li>UI Modern Brutalist Light Mode</li>
                 </ul>
               </div>
             </div>
 
             <div className="slide-footer">
-              <span>CairIn Pitch Deck</span>
+              <span>CashIn Pitch Deck</span>
               <span>Slide 9 / 10</span>
             </div>
           </div>
         )}
 
-        {/* SLIDE 10: ROADMAP */}
+        {/* SLIDE 10: TEAM & ROADMAP */}
         {currentSlide === 9 && (
           <div className="slide active" style={{ display: "flex", width: "100%", height: "100%", padding: "44px 56px", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
-              <div className="slide-eyebrow">PETA JALAN & RENCANA MASA DEPAN</div>
-              <h2 className="slide-heading">Rencana Eksekusi Menuju <em>Mainnet & Adopsi Massal</em></h2>
+              <div className="slide-eyebrow">TIM & PETA JALAN</div>
+              <h2 className="slide-heading">Tim Pengembang & <em>Rencana Eksekusi</em></h2>
             </div>
 
-            <div className="grid-4 slide-body">
-              <div className="card">
-                <span className="badge-pill" style={{ background: "var(--cairin-acid)" }}>Q4 2026</span>
-                <b>Hackathon MVP</b>
-                <p style={{ fontSize: "12px", color: "#555", marginTop: "6px" }}>Uji kontrak Base Sepolia, pemisahan rute aplikasi, dan integrasi wallet injected.</p>
+            <div className="grid-2 slide-body" style={{ gap: "16px" }}>
+              <div className="card" style={{ background: "var(--paper-white)" }}>
+                <span className="badge-pill" style={{ background: "var(--cairin-acid)" }}>TIM PEMBANGUN</span>
+                <div style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div>
+                    <b>Syifa Maulida</b>
+                    <p style={{ fontSize: "12px", color: "#555" }}>Product Lead & Frontend Developer — Arsitektur dApp, Web3 UX, dan desain produk.</p>
+                  </div>
+                  <div>
+                    <b>Sultan Saladin Pahlevi</b>
+                    <p style={{ fontSize: "12px", color: "#555" }}>Smart Contract & Full-Stack Engineer — Kontrak Solidity, keamanan on-chain, dan integrasi protokol.</p>
+                  </div>
+                </div>
               </div>
-              <div className="card" style={{ background: "var(--cairin-mint)" }}>
-                <span className="badge-pill" style={{ background: "#FFFFFF" }}>Q1 2027</span>
-                <b>Audit & AA Wallet</b>
-                <p style={{ fontSize: "12px", color: "#555", marginTop: "6px" }}>Audit keamanan eksternal & implementasi Account Abstraction (login via Google/Email).</p>
-              </div>
-              <div className="card">
-                <span className="badge-pill" style={{ background: "#DBEAFE" }}>Q2 2027</span>
-                <b>Peluncuran Mainnet</b>
-                <p style={{ fontSize: "12px", color: "#555", marginTop: "6px" }}>Deploy Base Mainnet resmi & kemitraan dengan komunitas freelancer terbesar Indonesia.</p>
-              </div>
-              <div className="card">
-                <span className="badge-pill" style={{ background: "#FED7AA)" }}>Q3 2027</span>
-                <b>Rupiah On-Ramp</b>
-                <p style={{ fontSize: "12px", color: "#555", marginTop: "6px" }}>Integrasi fiat gateway IDR langsung ke USDC & liquidity pool otomatis bagi investor institusi.</p>
+
+              <div className="card" style={{ background: "var(--paper-white)" }}>
+                <span className="badge-pill" style={{ background: "var(--cairin-mint)" }}>ROADMAP</span>
+                <div style={{ fontSize: "12px", color: "#444", lineHeight: "1.6" }}>
+                  • <b>Q4 2026:</b> Hackathon MVP & Validasi Smart Contract Base Sepolia.<br />
+                  • <b>Q1 2027:</b> Account Abstraction (ERC-4337) login email/Google & Paymaster.<br />
+                  • <b>Q2 2027:</b> Audit keamanan eksternal & peluncuran Base Mainnet.<br />
+                  • <b>Q3 2027:</b> On-ramp IDR langsung ke USDC & integrasi platform freelance.
+                </div>
               </div>
             </div>
 
             <div className="slide-footer">
-              <span>CairIn — Ethereum Jakarta 2026</span>
-              <span>Terima Kasih! (Slide 10 / 10)</span>
+              <span>CashIn — Build The Real World Onchain</span>
+              <span>Terima Kasih! • cashin-syifamwldas-projects.vercel.app</span>
             </div>
           </div>
         )}
