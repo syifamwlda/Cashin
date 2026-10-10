@@ -64,6 +64,6 @@ Sesuai komitmen integritas pada hackathon Ethereum Jakarta 2026:
 - **Konfigurasi Hardhat (`hardhat.config.ts`, `.env.example`)**: Setup Hardhat v3 dan integrasi TypeScript dibantu oleh AI.
 
 Visit our website !
-cashin-jzsmpuyhu-syifamwldas-projects.vercel.app
+https://cashin-syifamwldas-projects.vercel.app
 
 
