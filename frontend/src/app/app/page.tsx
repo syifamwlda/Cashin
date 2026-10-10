@@ -515,7 +515,7 @@ export default function PlatformWorkspacePage() {
       let onChainTokenId: bigint | undefined = undefined;
 
       if (isConnected) {
-        const targetChainId = chainId === baseSepolia.id ? baseSepolia.id : hardhat.id;
+        const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
         if (chainId && chainId !== targetChainId && switchChain) {
           try {
             await switchChain({ chainId: targetChainId });
@@ -619,7 +619,7 @@ export default function PlatformWorkspacePage() {
     }
     setIsClaimingFaucet(true);
     try {
-      const targetChainId = chainId === baseSepolia.id ? baseSepolia.id : hardhat.id;
+      const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
       // 1. Mint 10,000 MockUSDC
       const mintAmount = parseUnits("10000", 6);
       const mintHash = await writeContractAsync({
@@ -671,7 +671,7 @@ export default function PlatformWorkspacePage() {
         return;
       }
       try {
-        const targetChainId = chainId === baseSepolia.id ? baseSepolia.id : hardhat.id;
+        const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
         const hash = await writeContractAsync({
           chainId: targetChainId,
           address: CAIRIN_ADDRESS,
@@ -711,7 +711,7 @@ export default function PlatformWorkspacePage() {
         return;
       } else {
         try {
-          const targetChainId = chainId === baseSepolia.id ? baseSepolia.id : hardhat.id;
+          const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
           const hash = await writeContractAsync({
             chainId: targetChainId,
             address: CAIRIN_ADDRESS,
@@ -749,7 +749,7 @@ export default function PlatformWorkspacePage() {
         return;
       }
       try {
-        const targetChainId = chainId === baseSepolia.id ? baseSepolia.id : hardhat.id;
+        const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
 
         // 1. Cek saldo MockUSDC Investor
         try {
@@ -848,7 +848,7 @@ export default function PlatformWorkspacePage() {
       }
 
       try {
-        const targetChainId = chainId === baseSepolia.id ? baseSepolia.id : hardhat.id;
+        const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
 
         // 1. Cek Saldo MockUSDC Klien
         try {
