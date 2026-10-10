@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pitch Deck — CairIn (Ethereum Jakarta 2026)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #161614;
+      --paper: #F4F0E6;
+      --paper-card: #FCFAF4;
+      --paper-white: #FFFFFF;
+      --orange: #F97316;
+      --green: #14532D;
+      --emerald: #16A34A;
+      --mint: #BBF7D0;
+      --acid: #E2FD52;
+      --red: #DC2626;
+      --border: 2px solid var(--ink);
+      --shadow: 6px 6px 0 var(--ink);
+      --shadow-lg: 10px 10px 0 var(--ink);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #262521;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Deck Controls Toolbar */
+    .deck-toolbar {
+      width: min(1080px, 100%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--paper);
+      border: var(--border);
+      box-shadow: var(--shadow);
+      padding: 12px 20px;
+      margin-bottom: 16px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-badge {
+      background: var(--ink);
+      color: var(--paper);
+      font-size: 11px;
+      padding: 2px 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn-control {
+      padding: 8px 16px;
+      background: var(--paper-white);
+      border: 1.5px solid var(--ink);
+      box-shadow: 2px 2px 0 var(--ink);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .btn-control:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+
+    .btn-control.primary {
+      background: var(--acid);
+    }
+
+    /* Presentation Screen (16:9 Stage) */
+    .presentation-stage {
+      width: min(1080px, 100%);
+      aspect-ratio: 16 / 9;
+      background: var(--paper);
+      background-image: 
+        linear-gradient(rgba(22, 22, 20, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(22, 22, 20, 0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+      border: 3px solid var(--ink);
+      box-shadow: 14px 14px 0 rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+      padding: 44px 56px;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .slide.active {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.99); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Slide Header */
+    .slide-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--orange);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .slide-eyebrow::before {
+      content: '';
+      width: 16px;
+      height: 3px;
+      background: var(--orange);
+    }
+
+    .slide-heading {
+      font-size: clamp(28px, 3.4vw, 42px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .slide-heading em {
+      font-style: normal;
+      color: var(--green);
+      text-decoration: underline;
+      text-decoration-color: var(--acid);
+      text-decoration-thickness: 5px;
+    }
+
+    /* Slide Content Layouts */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    /* Brutalist Cards */
+    .card {
+      background: var(--paper-white);
+      border: var(--border);
+      box-shadow: var(--shadow);
+      padding: 20px 22px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #444;
+    }
+
+    .badge-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border: 1px solid var(--ink);
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+
+    .table-brutal {
+      width: 100%;
+      border-collapse: collapse;
+      border: var(--border);
+      background: var(--paper-white);
+      font-size: 12.5px;
+    }
+
+    .table-brutal th, .table-brutal td {
+      border: 1px solid var(--ink);
+      padding: 10px 14px;
+      text-align: left;
+    }
+
+    .table-brutal th {
+      background: #EAE4D5;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    /* Slide Footer */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1.5px dashed rgba(22, 22, 20, 0.2);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #666;
+    }
+
+    /* Print Optimizations for PDF Export */
+    @media print {
+      body {
+        background: transparent;
+        padding: 0;
+      }
+      .deck-toolbar {
+        display: none;
+      }
+      .presentation-stage {
+        border: none;
+        box-shadow: none;
+        width: 100%;
+        height: auto;
+      }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        height: 100vh;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Deck Controls Toolbar -->
+  <header class="deck-toolbar">
+    <div class="brand-title">
+      <span>CAIRIN SLIDE DECK</span>
+      <span class="brand-badge">RWA ON BASE</span>
+    </div>
+
+    <div class="toolbar-actions">
+      <span id="slideIndicator" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 800; margin-right: 8px;">
+        Slide 1 / 10
+      </span>
+      <button class="btn-control" onclick="prevSlide()">&larr; Prev</button>
+      <button class="btn-control" onclick="nextSlide()">Next &rarr;</button>
+      <button class="btn-control primary" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+    </div>
+  </header>
+
+  <!-- Presentation Stage (16:9) -->
+  <main class="presentation-stage" id="stage">
+
+    <!-- SLIDE 1: COVER -->
+    <section class="slide active">
+      <div style="margin-top: 20px;">
+        <div class="slide-eyebrow">ETHEREUM JAKARTA HACKATHON 2026 • RWA FACTORING</div>
+        <h1 style="font-size: clamp(44px, 5.5vw, 68px); font-weight: 900; letter-spacing: -0.04em; line-height: 1; margin-bottom: 16px;">
+          CAIRIN
+        </h1>
+        <p style="font-size: 24px; font-weight: 800; color: var(--green); margin-bottom: 24px;">
+          Ubah Piutang 30 Hari Menjadi Kas Hari Ini. Tanpa Bunga, Tanpa Ribet.
+        </p>
+        <p style="font-size: 16px; color: #444; max-width: 680px; line-height: 1.5;">
+          Platform anjak piutang terdesentralisasi (Decentralized Invoice Financing) berbasis tokenisasi NFT ERC-721 di jaringan Base Sepolia.
+        </p>
+      </div>
+
+      <div class="grid-3" style="margin-top: 30px;">
+        <div class="card" style="background: var(--acid);">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800;">TARGET PENGGUNA</div>
+          <b style="font-size: 16px;">Pekerja Lepas & Agensi Digital</b>
+        </div>
+        <div class="card" style="background: var(--mint);">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800;">INSTRUMEN RWA</div>
+          <b style="font-size: 16px;">NFT ERC-721 + Settlement USDC</b>
+        </div>
+        <div class="card" style="background: #DBEAFE;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800;">JARINGAN BLOCKCHAIN</div>
+          <b style="font-size: 16px;">Base Sepolia (L2 Ethereum)</b>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Presenter: Syifa Maulida & Tim CairIn</span>
+        <span>github.com/syifamwlda/Cashin</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: THE PROBLEM -->
+    <section class="slide">
+      <div>
+        <div class="slide-eyebrow">LATAR BELAKANG MASALAH</div>
+        <h2 class="slide-heading">Krisis Arus Kas 30–90 Hari <em>Pekerja Lepas</em></h2>
+      </div>
+
+      <div class="grid-2 slide-body">
+        <div class="card" style="border-left: 6px solid var(--red);">
+          <div class="card-title">⏳ Termin Pembayaran yang Lama (Net 30-90)</div>
+          <p class="card-desc">
+            Pekerjaan selesai hari ini, namun klien baru membayar 1 hingga 3 bulan kemudian. Arus kas freelancer macet untuk kebutuhan hidup bulanan.
+          </p>
+        </div>
+
+        <div class="card" style="border-left: 6px solid var(--red);">
+          <div class="card-title">🏦 Ditolak Perbankan Konvensional</div>
+          <p class="card-desc">
+            Bank menolak anjak piutang mikro karena ketiadaan sertifikat agunan fisik tanah/properti dan nominal tiket yang dinilai terlalu kecil.
+          </p>
+        </div>
+
+        <div class="card" style="border-left: 6px solid var(--red);">
+          <div class="card-title">⚠️ Jeratan Pinjaman Online Berbunga Tinggi</div>
+          <p class="card-desc">
+            Demi menutupi kebutuhan, freelancer terjerat pinjol berbunga 20–30% per bulan yang memperburuk kondisi keuangan.
+          </p>
+        </div>
+
+        <div class="card" style="border-left: 6px solid var(--red);">
+          <div class="card-title">🛑 Risiko Penipuan Faktur Ganda di TradFi</div>
+          <p class="card-desc">
+            Pada perbankan tradisional, risiko terbesar adalah satu faktur difotokopi dan dijual berulang kali ke beberapa pemodal berbeda (*double factoring*).
+          </p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>CairIn Pitch Deck</span>
+        <span>Slide 2 / 10</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: THE SOLUTION -->
+    <section class="slide">
+      <div>
+        <div class="slide-eyebrow">SOLUSI KAMI</div>
+        <h2 class="slide-heading">Anjak Piutang On-Chain <em>Berbasis Real-World Asset</em></h2>
+      </div>
+
+      <div class="grid-3 slide-body">
+        <div class="card">
+          <span class="badge-pill" style="background: var(--acid);">01. TOKENISASI</span>
+          <div class="card-title">NFT Hak Tagih ERC-721</div>
+          <p class="card-desc">
+            Setiap invoice digital yang disahkan dicetak menjadi token NFT unik di Base Sepolia, mengunci hak klaim pembayaran secara legal on-chain.
+          </p>
+        </div>
+
+        <div class="card">
+          <span class="badge-pill" style="background: var(--mint);">02. LIKUIDITAS</span>
+          <div class="card-title">Pencairan Instan di Muka</div>
+          <p class="card-desc">
+            Freelancer menjual hak tagih dengan potongan diskon wajar (misal 8%) kepada investor. Dana USDC langsung cair detik itu juga tanpa bunga pinjaman.
+          </p>
+        </div>
+
+        <div class="card">
+          <span class="badge-pill" style="background: #DBEAFE;">03. SETTLEMENT</span>
+          <div class="card-title">Pelunasan Otomatis Klien</div>
+          <p class="card-desc">
+            Saat jatuh tempo, klien membayar 100% langsung ke smart contract yang otomatis meneruskannya ke investor pemegang NFT.
+          </p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>CairIn Pitch Deck</span>
+        <span>Slide 3 / 10</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: HOW IT WORKS -->
+    <section class="slide">
+      <div>
+        <div class="slide-eyebrow">ALUR PRODUK</div>
+        <h2 class="slide-heading">Alur Transaksi <em>3 Langkah Sederhana</em></h2>
+      </div>
+
+      <div class="slide-body" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="card" style="display: flex; gap: 20px; align-items: center;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 900; color: var(--orange);">01</div>
+          <div>
+            <b>Freelancer Terbitkan Invoice</b>
+            <p style="font-size: 13px; color: #555;">Memasukkan nominal USDC, alamat klien, dan tanggal jatuh tempo. Smart contract mencetak NFT (Status: <code>Draft</code>).</p>
+          </div>
+        </div>
+
+        <div class="card" style="display: flex; gap: 20px; align-items: center;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 900; color: var(--green);">02</div>
+          <div>
+            <b>Klien Sahkan & Investor Danai di Bursa</b>
+            <p style="font-size: 13px; color: #555;">Klien mengonfirmasi pekerjaan selesai (<code>Disetujui</code>). Tagihan ditawarkan di bursa (<code>Di Bursa</code>). Investor menyetor USDC dan dana seketika cair ke freelancer (<code>Didanai</code>).</p>
+          </div>
+        </div>
+
+        <div class="card" style="display: flex; gap: 20px; align-items: center;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 900; color: var(--ink);">03</div>
+          <div>
+            <b>Pelunasan Klien Saat Jatuh Tempo</b>
+            <p style="font-size: 13px; color: #555;">Klien mentransfer pelunasan 100% penuh saat jatuh tempo. Kontrak otomatis menyalurkan dana ke investor pemegang NFT (<code>Lunas</code>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>CairIn Pitch Deck</span>
+        <span>Slide 4 / 10</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: SECURITY INNOVATION -->
+    <section class="slide">
+      <div>
+        <div class="slide-eyebrow">INOVASI KEAMANAN</div>
+        <h2 class="slide-heading">Proteksi Piutang Ganda: <em>Atomic State Guard</em></h2>
+      </div>
+
+      <div class="grid-2 slide-body">
+        <div>
+          <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 12px;">State Machine Smart Contract</h3>
+          <p style="font-size: 14px; line-height: 1.6; color: #444; margin-bottom: 16px;">
+            Fungsi <code>fundInvoice</code> pada smart contract CairIn secara mutlak mewajibkan kondisi status:
+            <br>
+            <code style="font-family: 'JetBrains Mono', monospace; background: #E5E1D6; padding: 2px 6px; font-size: 12px; font-weight: 700;">
+              require(inv.status == InvoiceStatus.Listed)
+            </code>
+          </p>
+          <div class="card" style="background: var(--mint); border-color: var(--green);">
+            <b style="color: var(--green); font-size: 14px;">✓ Garansi 100% Anti-Double Financing</b>
+            <p style="font-size: 12.5px; color: #333; margin-top: 4px;">
+              Begitu investor pertama mendanai, status terkunci ke <code>Financed</code>. Upaya pendanaan ulang otomatis digagalkan (revert) oleh EVM tanpa kehilangan saldo sepeser pun.
+            </p>
+          </div>
+        </div>
+
+        <table class="table-brutal">
+          <thead>
+            <tr>
+              <th>Status Kontrak</th>
+              <th>Aksi Diizinkan</th>
+              <th>Proteksi EVM</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Draft</b></td>
+              <td>Verifikasi Klien</td>
+              <td>Tidak bisa dibeli</td>
+            </tr>
+            <tr>
+              <td><b>Disetujui</b></td>
+              <td>Pasang Diskon</td>
+              <td>Siap ke bursa</td>
+            </tr>
+            <tr>
+              <td><b>Di Bursa</b></td>
+              <td>Didanai Investor</td>
+              <td>Menerima USDC</td>
+            </tr>
+            <tr style="background: #FEE2E2;">
+              <td><b>Didanai</b></td>
+              <td>Pelunasan Klien</td>
+              <td><b>Tolak pembelian ke-2</b></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="slide-footer">
+        <span>CairIn Pitch Deck</span>
+        <span>Slide 5 / 10</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: MARKET OPPORTUNITY -->
+    <section class="slide">
+      <div>
+        <div class="slide-eyebrow">POTENSI PASAR</div>
+        <h2 class="slide-heading">Peluang Pasar <em>Gig Economy & RWA Asia Tenggara</em></h2>
+      </div>
+
+      <div class="grid-3 slide-body">
+        <div class="card">
+          <div style="font-size: 32px; font-weight: 900; color: var(--orange); font-family: 'JetBrains Mono', monospace;">140M+</div>
+          <div class="card-title">Pekerja Informal & Gig ASEAN</div>
+          <p class="card-desc">
+            Indonesia memiliki puluhan juta pekerja digital lepas, agensi desain, software house, dan konsultan yang terkendala siklus termin piutang.
+          </p>
+        </div>
+
+        <div class="card">
+          <div style="font-size: 32px; font-weight: 900; color: var(--green); font-family: 'JetBrains Mono', monospace;">$16T</div>
+          <div class="card-title">Proyeksi Pasar RWA 2030</div>
+          <p class="card-desc">
+            Sektor tokenisasi aset dunia nyata (RWA Private Credit) bertumbuh eksponensial karena investor Web3 mencari imbal hasil nyata dan stabil.
+          </p>
+        </div>
+
+        <div class="card">
+          <div style="font-size: 32px; font-weight: 900; color: var(--ink); font-family: 'JetBrains Mono', monospace;">$0.001</div>
+          <div class="card-title">Gas Fee Sangat Efisien di Base</div>
+          <p class="card-desc">
+            Biaya transaksi di Base L2 memungkinkan pembiayaan invoice bernilai mikro ($200 – $2.000) tanpa terbebani biaya gas Ethereum mainnet.
+          </p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>CairIn Pitch Deck</span>
+        <span>Slide 6 / 10</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 7: BUSINESS MODEL -->
+    <section class="slide">
+      <div>
+        <div class="slide-eyebrow">MODEL BISNIS</div>
+        <h2 class="slide-heading">Pendapatan Protokol <em>yang Berkelanjutan</em></h2>
+      </div>
+
+      <div class="grid-3 slide-body">
+        <div class="card">
+          <span class="badge-pill" style="background: var(--acid);">ALIRAN 1</span>
+          <div class="card-title">Biaya Pencairan (0.5% – 1%)</div>
+          <p class="card-desc">
+            Dipotong otomatis dari nilai pencairan invoice saat transaksi pendanaan sukses dieksekusi di smart contract.
+          </p>
+        </div>
+
+        <div class="card">
+          <span class="badge-pill" style="background: var(--mint);">ALIRAN 2</span>
+          <div class="card-title">Biaya Pelunasan (0.25%)</div>
+          <p class="card-desc">
+            Biaya administrasi protokol saat klien melunasi tagihan saat tanggal jatuh tempo kontrak.
+          </p>
+        </div>
+
+        <div class="card">
+          <span class="badge-pill" style="background: #DBEAFE;">ALIRAN 3</span>
+          <div class="card-title">Enterprise API & SLA</div>
+          <p class="card-desc">
+            Langganan integrasi otomatis ERP / software akuntansi untuk agensi besar dan korporasi yang menerbitkan puluhan faktur per bulan.
+          </p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>CairIn Pitch Deck</span>
+        <span>Slide 7 / 10</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: COMPETITIVE ADVANTAGE -->
+    <section class="slide">
+      <div>
+        <div class="slide-eyebrow">KOMPARASI KOMPETITIF</div>
+        <h2 class="slide-heading">Mengapa CairIn <em>Unggul Dibandingkan Alternatif Lain?</em></h2>
+      </div>
+
+      <div class="slide-body">
+        <table class="table-brutal">
+          <thead>
+            <tr>
+              <th>Fitur / Parameter</th>
+              <th>Bank Tradisional</th>
+              <th>Pinjaman Online (Pinjol)</th>
+              <th style="background: var(--acid);">CAIRIN (RWA Web3)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Waktu Pencairan</b></td>
+              <td>2–4 minggu proses berkas</td>
+              <td>1–2 hari kerja</td>
+              <td style="background: #F4F9D8;"><b>Detik (Instan di Blockchain)</b></td>
+            </tr>
+            <tr>
+              <td><b>Struktur Finansial</b></td>
+              <td>Utang berbunga</td>
+              <td>Bunga tinggi (20–30%/bln)</td>
+              <td style="background: #F4F9D8;"><b>Bukan utang (Jual-beli diskon)</b></td>
+            </tr>
+            <tr>
+              <td><b>Persyaratan Agunan</b></td>
+              <td>Sertifikat tanah / aset fisik</td>
+              <td>Akses kontak & data pribadi</td>
+              <td style="background: #F4F9D8;"><b>Tanpa agunan (Validasi klien)</b></td>
+            </tr>
+            <tr>
+              <td><b>Proteksi Piutang Ganda</b></td>
+              <td>Pengecekan manual rawan lolos</td>
+              <td>Tidak relevan</td>
+              <td style="background: #F4F9D8;"><b>Terkunci kriptografis ERC-721</b></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="slide-footer">
+        <span>CairIn Pitch Deck</span>
+        <span>Slide 8 / 10</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 9: TECH STACK -->
+    <section class="slide">
+      <div>
+        <div class="slide-eyebrow">ARSITEKTUR TEKNOLOGI</div>
+        <h2 class="slide-heading">Teknologi Modern & <em>Infrastruktur Teruji</em></h2>
+      </div>
+
+      <div class="grid-3 slide-body">
+        <div class="card">
+          <div class="card-title">⛓️ Smart Contracts</div>
+          <ul style="font-size: 13px; line-height: 1.6; color: #444; padding-left: 18px;">
+            <li>Solidity 0.8.28</li>
+            <li>Hardhat 3 Tooling</li>
+            <li>OpenZeppelin ERC-721 & ReentrancyGuard</li>
+            <li>100% Test Coverage</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🌐 Base Sepolia L2</div>
+          <ul style="font-size: 13px; line-height: 1.6; color: #444; padding-left: 18px;">
+            <li>Didukung ekosistem Coinbase</li>
+            <li>Biaya gas mikro (< Rp100)</li>
+            <li>Finalitas transaksi sub-detik</li>
+            <li>Settlement USDC Stablecoin</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">💻 Frontend Modular</div>
+          <ul style="font-size: 13px; line-height: 1.6; color: #444; padding-left: 18px;">
+            <li>Next.js 16 (App Router)</li>
+            <li>Wagmi v2 & Viem Web3</li>
+            <li>TanStack React Query</li>
+            <li>Pemisahan Landing Page & Workspace</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>CairIn Pitch Deck</span>
+        <span>Slide 9 / 10</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 10: ROADMAP & CLOSING -->
+    <section class="slide">
+      <div>
+        <div class="slide-eyebrow">PETA JALAN & RENCANA MASA DEPAN</div>
+        <h2 class="slide-heading">Rencana Eksekusi Menuju <em>Mainnet & Adopsi Massal</em></h2>
+      </div>
+
+      <div class="grid-4 slide-body">
+        <div class="card">
+          <span class="badge-pill" style="background: var(--acid);">Q4 2026</span>
+          <b>Hackathon MVP</b>
+          <p style="font-size: 12px; color: #555; margin-top: 6px;">Uji kontrak Base Sepolia, pemisahan rute aplikasi, dan integrasi wallet injected.</p>
+        </div>
+        <div class="card">
+          <span class="badge-pill" style="background: var(--mint);">Q1 2027</span>
+          <b>Audit & AA Wallet</b>
+          <p style="font-size: 12px; color: #555; margin-top: 6px;">Audit keamanan eksternal & implementasi Account Abstraction (login via Google/Email).</p>
+        </div>
+        <div class="card">
+          <span class="badge-pill" style="background: #DBEAFE;">Q2 2027</span>
+          <b>Peluncuran Mainnet</b>
+          <p style="font-size: 12px; color: #555; margin-top: 6px;">Deploy Base Mainnet resmi & kemitraan dengan komunitas freelancer terbesar Indonesia.</p>
+        </div>
+        <div class="card">
+          <span class="badge-pill" style="background: #FED7AA;">Q3 2027</span>
+          <b>Rupiah On-Ramp</b>
+          <p style="font-size: 12px; color: #555; margin-top: 6px;">Integrasi fiat gateway IDR langsung ke USDC & liquidity pool otomatis bagi investor institusi.</p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>CairIn — Ethereum Jakarta 2026</span>
+        <span>Terima Kasih! (Slide 10 / 10)</span>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const indicator = document.getElementById('slideIndicator');
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      indicator.textContent = `Slide ${currentSlide + 1} / ${totalSlides}`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    // Keyboard Navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>
