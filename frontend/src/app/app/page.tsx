@@ -224,6 +224,8 @@ export default function PlatformWorkspacePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isClaimingFaucet, setIsClaimingFaucet] = useState(false);
+  const [isAddingToken, setIsAddingToken] = useState(false);
+  const [tokenCopiedMsg, setTokenCopiedMsg] = useState(false);
 
   // Load localStorage after hydration to guarantee server and initial client match
   useEffect(() => {
@@ -428,11 +430,18 @@ export default function PlatformWorkspacePage() {
   };
 
   const handleAddUsdcToMetaMask = async () => {
+    if (!activeConnected || !address) {
+      alert("Silakan hubungkan dompet MetaMask terlebih dahulu.");
+      return;
+    }
     if (typeof window !== "undefined" && (window as unknown as { ethereum?: { request: (args: unknown) => Promise<unknown> } }).ethereum) {
+      setIsAddingToken(true);
       try {
         const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
         const targetAddresses = getContractAddresses(targetChainId);
-        await (window as unknown as { ethereum: { request: (args: unknown) => Promise<unknown> } }).ethereum.request({
+        
+        // Timeout 12 detik agar tidak stuck jika modal MetaMask diminimalkan oleh browser
+        const watchPromise = (window as unknown as { ethereum: { request: (args: unknown) => Promise<unknown> } }).ethereum.request({
           method: "wallet_watchAsset",
           params: {
             type: "ERC20",
@@ -443,11 +452,38 @@ export default function PlatformWorkspacePage() {
             },
           },
         });
-      } catch (e) {
-        console.warn("handleAddUsdcToMetaMask:", e);
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("TIMEOUT")), 12000)
+        );
+
+        await Promise.race([watchPromise, timeoutPromise]);
+        alert("✅ Token MockUSDC berhasil didaftarkan di dompet MetaMask Anda!");
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (msg === "TIMEOUT") {
+          alert(
+            "⏳ Permintaan sedang diproses MetaMask.\n\nJika jendela tidak muncul otomatis, silakan klik ikon rubah MetaMask di toolbar browser Anda untuk menyetujui."
+          );
+        } else {
+          console.warn("handleAddUsdcToMetaMask:", e);
+        }
+      } finally {
+        setIsAddingToken(false);
       }
     } else {
-      alert("Ekstensi MetaMask tidak ditemukan.");
+      alert("Ekstensi MetaMask tidak ditemukan di peramban Anda.");
+    }
+  };
+
+  const handleCopyTokenAddress = async () => {
+    const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
+    const targetAddresses = getContractAddresses(targetChainId);
+    try {
+      await navigator.clipboard.writeText(targetAddresses.mockUsdc);
+      setTokenCopiedMsg(true);
+      setTimeout(() => setTokenCopiedMsg(false), 2500);
+    } catch {
+      alert(`Alamat MockUSDC: ${targetAddresses.mockUsdc}`);
     }
   };
 
@@ -663,7 +699,7 @@ export default function PlatformWorkspacePage() {
     }
   };
 
-  // Handler: Klaim Faucet MockUSDC + Auto Approve untuk Demo Pengujian
+  // Handler: Klaim Faucet MockUSDC (Backend Gasless + On-Chain Fallback)
   const handleClaimFaucet = async () => {
     if (!activeConnected || !address) {
       alert("Silakan hubungkan dompet MetaMask terlebih dahulu.");
@@ -673,41 +709,63 @@ export default function PlatformWorkspacePage() {
     try {
       const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
       const targetAddresses = getContractAddresses(targetChainId);
-      // 1. Mint 10,000 MockUSDC
-      const mintAmount = parseUnits("10000", 6);
-      const mintHash = await writeContractAsync({
-        chainId: targetChainId,
-        address: targetAddresses.mockUsdc,
-        abi: mockUsdcAbi,
-        functionName: "mint",
-        args: [address, mintAmount],
-      });
-      await waitForTransactionReceipt(config, { hash: mintHash, chainId: targetChainId });
+      let success = false;
+
+      // 1. Coba Server-Side Faucet terlebih dahulu (Gratis Gas: pengguna tidak perlu saldo ETH)
+      if (targetChainId === baseSepolia.id) {
+        try {
+          const res = await fetch("/api/faucet", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ address }),
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            success = true;
+          } else {
+            console.warn("Backend faucet response:", data);
+          }
+        } catch (apiErr) {
+          console.warn("Backend faucet unreachable, falling back to direct mint:", apiErr);
+        }
+      }
+
+      // 2. Fallback: jika server API tidak berhasil atau saat di localhost, mint via wallet pengguna
+      if (!success) {
+        const mintAmount = parseUnits("10000", 6);
+        const mintHash = await writeContractAsync({
+          chainId: targetChainId,
+          address: targetAddresses.mockUsdc,
+          abi: mockUsdcAbi,
+          functionName: "mint",
+          args: [address, mintAmount],
+        });
+        await waitForTransactionReceipt(config, { hash: mintHash, chainId: targetChainId });
+        success = true;
+      }
 
       // Refresh on-chain balance
       await fetchUsdcBalance();
 
-      // Minta MetaMask menambahkan token USDC ke tampilan aset
+      // Trigger penambahan token ke MetaMask secara asinkron tanpa menahan UI (jangan block isClaimingFaucet)
       if (typeof window !== "undefined" && (window as unknown as { ethereum?: { request: (args: unknown) => Promise<unknown> } }).ethereum) {
-        try {
-          await (window as unknown as { ethereum: { request: (args: unknown) => Promise<unknown> } }).ethereum.request({
-            method: "wallet_watchAsset",
-            params: {
-              type: "ERC20",
-              options: {
-                address: targetAddresses.mockUsdc,
-                symbol: "USDC",
-                decimals: 6,
-              },
+        (window as unknown as { ethereum: { request: (args: unknown) => Promise<unknown> } }).ethereum.request({
+          method: "wallet_watchAsset",
+          params: {
+            type: "ERC20",
+            options: {
+              address: targetAddresses.mockUsdc,
+              symbol: "USDC",
+              decimals: 6,
             },
-          });
-        } catch {
-          // user rejected watchAsset modal
-        }
+          },
+        }).catch(() => {
+          // Abaikan jika pengguna menutup dialog atau menolak penambahan aset
+        });
       }
 
       alert(
-        `🎉 Berhasil Klaim Faucet!\n\n10,000 MockUSDC telah berhasil masuk ke akun dompet Anda (${formatShortAddress(address)}). Saldo di platform kini telah terupdate!`
+        `🎉 Berhasil Klaim Faucet!\n\n10,000 MockUSDC telah berhasil masuk ke akun dompet Anda (${formatShortAddress(address)}).\n\nSaldo di platform kini telah terupdate!`
       );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -1636,10 +1694,11 @@ export default function PlatformWorkspacePage() {
                   )}
                 </span>
               </div>
-              <div style={{ marginTop: "8px", display: "flex", gap: "8px", alignItems: "center" }}>
+              <div style={{ marginTop: "8px", display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                 <button
                   type="button"
                   onClick={handleAddUsdcToMetaMask}
+                  disabled={isAddingToken}
                   style={{
                     fontSize: "11px",
                     fontWeight: 700,
@@ -1648,15 +1707,36 @@ export default function PlatformWorkspacePage() {
                     border: "1px solid #c2e0e5",
                     borderRadius: "6px",
                     padding: "4px 10px",
-                    cursor: "pointer",
+                    cursor: isAddingToken ? "wait" : "pointer",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "5px",
+                    opacity: isAddingToken ? 0.7 : 1,
                   }}
                   title="Tampilkan saldo MockUSDC langsung di daftar token MetaMask Anda"
                 >
                   <CoinsIcon size={12} color="#0e3e44" />
-                  <span>+ Tambah Token ke MetaMask</span>
+                  <span>{isAddingToken ? "Cek MetaMask..." : "+ Tambah Token ke MetaMask"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyTokenAddress}
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: "#475569",
+                    background: "#f1f5f9",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "6px",
+                    padding: "4px 8px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                  title="Salin alamat kontrak MockUSDC untuk diimpor manual di MetaMask"
+                >
+                  <span>{tokenCopiedMsg ? "✓ Tersalin!" : "📋 Salin Alamat Kontrak"}</span>
                 </button>
               </div>
 
