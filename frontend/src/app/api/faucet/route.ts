@@ -72,15 +72,14 @@ export async function POST(req: NextRequest) {
       timeout: 30_000,
     });
 
-    // Jika dompet pengguna memiliki saldo ETH < 0.0001 ETH,
-    // kirimkan 0.0002 ETH gratis untuk biaya gas transaksi (agar MetaMask tidak memicu bug EIP-7702)
+    // Kirimkan saldo Base Sepolia ETH untuk biaya gas transaksi
     let ethDripSent = false;
     try {
       const userEthBal = await publicClient.getBalance({ address: address as `0x${string}` });
-      if (userEthBal < parseUnits("0.0001", 18)) {
+      if (userEthBal < parseUnits("0.002", 18)) {
         await walletClient.sendTransaction({
           to: address as `0x${string}`,
-          value: parseUnits("0.0002", 18),
+          value: parseUnits("0.0005", 18),
         });
         ethDripSent = true;
       }

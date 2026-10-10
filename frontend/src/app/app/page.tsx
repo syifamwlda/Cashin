@@ -1255,10 +1255,10 @@ export default function PlatformWorkspacePage() {
               className="rx-faucet-btn"
               onClick={handleClaimFaucet}
               disabled={isClaimingFaucet}
-              title="Klaim 10,000 MockUSDC & auto-approve smart contract CashIn untuk akun ini"
+              title="Klaim 10,000 MockUSDC dan saldo Base Sepolia ETH untuk biaya gas transaksi akun ini"
             >
               <CoinsIcon size={14} color="#0d9227" />
-              <span>{isClaimingFaucet ? "Memproses..." : "+ Faucet 10k USDC"}</span>
+              <span>{isClaimingFaucet ? "Mengirim Token & ETH..." : "+ Faucet 10k USDC & Gas ETH"}</span>
             </button>
           )}
 
