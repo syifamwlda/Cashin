@@ -62,3 +62,8 @@ Sesuai komitmen integritas pada hackathon Ethereum Jakarta 2026:
 - **Smart Contract (`CairIn.sol`, `MockUSDC.sol`)**: Struktur kontrak, enum status, dan logika transfer token/NFT dibantu disusun dengan asistensi AI (Antigravity).
 - **Pengujian (`test/CairIn.ts`)**: Skenario pengujian otomasi ditulis bersama AI untuk memvalidasi pencegahan *double-funding* dan akurasi saldo token.
 - **Konfigurasi Hardhat (`hardhat.config.ts`, `.env.example`)**: Setup Hardhat v3 dan integrasi TypeScript dibantu oleh AI.
+
+Visit our website !
+cashin-jzsmpuyhu-syifamwldas-projects.vercel.app
+
+
