@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useSyncExternalStore } from "react";
+import { useState, useEffect, useSyncExternalStore, useCallback } from "react";
 import Link from "next/link";
 import {
   useAccount,
@@ -241,6 +241,32 @@ export default function PlatformWorkspacePage() {
   const activeAddress = isMounted && isConnected ? address : undefined;
   const activeChainId = isMounted && isConnected ? chainId : undefined;
 
+  const [userUsdcBalance, setUserUsdcBalance] = useState<bigint | null>(null);
+
+  const fetchUsdcBalance = useCallback(async () => {
+    if (!address) return;
+    try {
+      const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
+      const targetAddresses = getContractAddresses(targetChainId);
+      const bal = (await readContract(config, {
+        chainId: targetChainId,
+        address: targetAddresses.mockUsdc,
+        abi: mockUsdcAbi,
+        functionName: "balanceOf",
+        args: [address],
+      })) as bigint;
+      setUserUsdcBalance(bal);
+    } catch (e) {
+      console.warn("fetchUsdcBalance error:", e);
+    }
+  }, [address, chainId, config]);
+
+  useEffect(() => {
+    if (activeConnected && address) {
+      fetchUsdcBalance();
+    }
+  }, [activeConnected, address, fetchUsdcBalance]);
+
   // Scope Mode: 'wallet' (Hanya invoice dompet ini) | 'all' (Bursa Global)
   const [viewScope, setViewScope] = useState<"wallet" | "all">("wallet");
   const [walletRoleFilter, setWalletRoleFilter] = useState<"all" | "freelancer" | "client">("all");
@@ -392,14 +418,37 @@ export default function PlatformWorkspacePage() {
     }, 2000);
   };
 
-  const handleRefreshBalance = () => {
+  const handleRefreshBalance = async () => {
     if (isRefreshingBalance) return;
     setIsRefreshingBalance(true);
-    setTimeout(() => {
-      setIsRefreshingBalance(false);
-      setBalanceRefreshedMsg(true);
-      setTimeout(() => setBalanceRefreshedMsg(false), 2500);
-    }, 600);
+    await fetchUsdcBalance();
+    setIsRefreshingBalance(false);
+    setBalanceRefreshedMsg(true);
+    setTimeout(() => setBalanceRefreshedMsg(false), 2500);
+  };
+
+  const handleAddUsdcToMetaMask = async () => {
+    if (typeof window !== "undefined" && (window as unknown as { ethereum?: { request: (args: unknown) => Promise<unknown> } }).ethereum) {
+      try {
+        const targetChainId = chainId === hardhat.id ? hardhat.id : baseSepolia.id;
+        const targetAddresses = getContractAddresses(targetChainId);
+        await (window as unknown as { ethereum: { request: (args: unknown) => Promise<unknown> } }).ethereum.request({
+          method: "wallet_watchAsset",
+          params: {
+            type: "ERC20",
+            options: {
+              address: targetAddresses.mockUsdc,
+              symbol: "USDC",
+              decimals: 6,
+            },
+          },
+        });
+      } catch (e) {
+        console.warn("handleAddUsdcToMetaMask:", e);
+      }
+    } else {
+      alert("Ekstensi MetaMask tidak ditemukan.");
+    }
   };
 
   // Helper formats
@@ -632,31 +681,39 @@ export default function PlatformWorkspacePage() {
         abi: mockUsdcAbi,
         functionName: "mint",
         args: [address, mintAmount],
-        gas: 150000n,
       });
       await waitForTransactionReceipt(config, { hash: mintHash, chainId: targetChainId });
 
-      // 2. Approve CairIn contract
-      const approveHash = await writeContractAsync({
-        chainId: targetChainId,
-        address: targetAddresses.mockUsdc,
-        abi: mockUsdcAbi,
-        functionName: "approve",
-        args: [
-          targetAddresses.cairIn,
-          115792089237316195423570985008687907853269984665640564039457584007913129639935n,
-        ],
-        gas: 100000n,
-      });
-      await waitForTransactionReceipt(config, { hash: approveHash, chainId: targetChainId });
+      // Refresh on-chain balance
+      await fetchUsdcBalance();
+
+      // Minta MetaMask menambahkan token USDC ke tampilan aset
+      if (typeof window !== "undefined" && (window as unknown as { ethereum?: { request: (args: unknown) => Promise<unknown> } }).ethereum) {
+        try {
+          await (window as unknown as { ethereum: { request: (args: unknown) => Promise<unknown> } }).ethereum.request({
+            method: "wallet_watchAsset",
+            params: {
+              type: "ERC20",
+              options: {
+                address: targetAddresses.mockUsdc,
+                symbol: "USDC",
+                decimals: 6,
+              },
+            },
+          });
+        } catch {
+          // user rejected watchAsset modal
+        }
+      }
 
       alert(
-        `🎉 Berhasil Klaim Faucet!\n\n10,000 MockUSDC telah berhasil masuk ke akun dompet Anda (${formatShortAddress(address)}) dan sudah disetujui (Approved) untuk smart contract CashIn.`
+        `🎉 Berhasil Klaim Faucet!\n\n10,000 MockUSDC telah berhasil masuk ke akun dompet Anda (${formatShortAddress(address)}). Saldo di platform kini telah terupdate!`
       );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error("Faucet error:", err);
-      alert(`Gagal klaim faucet: ${msg}`);
+      await fetchUsdcBalance();
+      alert(`Status klaim: ${msg}`);
     } finally {
       setIsClaimingFaucet(false);
     }
@@ -1557,9 +1614,16 @@ export default function PlatformWorkspacePage() {
                     : "⚪ Base Sepolia Testnet"}
                 </span>
               </div>
-              <div className="rx-balance-amount">$102,540.00 <span style={{ fontSize: "16px", color: "#64748b" }}>USDC</span></div>
+              <div className="rx-balance-amount">
+                {userUsdcBalance !== null
+                  ? `$${Number(formatUnits(userUsdcBalance, 6)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                  : "$10,000.00"}{" "}
+                <span style={{ fontSize: "16px", color: "#64748b" }}>USDC</span>
+              </div>
               <div className="rx-balance-subinfo">
-                <span>16:12:45 • Real-time On-chain Sync</span>
+                <span>
+                  {balanceRefreshedMsg ? "✅ Saldo Berhasil Diperbarui" : "Real-time On-chain Sync"}
+                </span>
                 <span
                   style={{ color: "#0e3e44", cursor: "pointer", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "5px" }}
                   onClick={handleRefreshBalance}
@@ -1571,6 +1635,29 @@ export default function PlatformWorkspacePage() {
                     <span>Refresh</span>
                   )}
                 </span>
+              </div>
+              <div style={{ marginTop: "8px", display: "flex", gap: "8px", alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={handleAddUsdcToMetaMask}
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    color: "#0e3e44",
+                    background: "#e6f1f3",
+                    border: "1px solid #c2e0e5",
+                    borderRadius: "6px",
+                    padding: "4px 10px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                  title="Tampilkan saldo MockUSDC langsung di daftar token MetaMask Anda"
+                >
+                  <CoinsIcon size={12} color="#0e3e44" />
+                  <span>+ Tambah Token ke MetaMask</span>
+                </button>
               </div>
 
               {/* 4 Action Buttons Grid matching Raxon */}
