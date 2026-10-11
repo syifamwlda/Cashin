@@ -5,7 +5,40 @@ import Link from "next/link";
 
 export default function PitchDeckPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const totalSlides = 10;
+  const totalSlides = 5;
+
+  // 3-Minute Presentation Timer helper for hackathon pitch rehearsal
+  const [timerSeconds, setTimerSeconds] = useState(180); // 3 minutes = 180s
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (isTimerRunning && timerSeconds > 0) {
+      interval = setInterval(() => {
+        setTimerSeconds((prev) => prev - 1);
+      }, 1000);
+    } else if (timerSeconds === 0) {
+      setIsTimerRunning(false);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isTimerRunning, timerSeconds]);
+
+  const toggleTimer = () => {
+    setIsTimerRunning(!isTimerRunning);
+  };
+
+  const resetTimer = () => {
+    setIsTimerRunning(false);
+    setTimerSeconds(180);
+  };
+
+  const formatTimer = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
 
   const nextSlide = () => {
     if (currentSlide < totalSlides - 1) setCurrentSlide((prev) => prev + 1);
@@ -31,12 +64,12 @@ export default function PitchDeckPage() {
     background: "#FFFFFF",
     border: "2px solid #111827",
     boxShadow: "4px 4px 0 #111827",
-    padding: "18px 20px",
+    padding: "16px 18px",
     color: "#111827",
   };
 
   const btnStyle = {
-    padding: "8px 16px",
+    padding: "8px 14px",
     background: "#FFFFFF",
     border: "1.5px solid #111827",
     boxShadow: "2px 2px 0 #111827",
@@ -51,24 +84,25 @@ export default function PitchDeckPage() {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: "14px",
+    paddingTop: "12px",
     borderTop: "1.5px dashed rgba(17, 24, 39, 0.25)",
     fontFamily: "var(--mono, monospace)",
-    fontSize: "11.5px",
+    fontSize: "11px",
     fontWeight: 700,
     color: "#4B5563",
   };
 
   return (
-    <div style={{ backgroundColor: "#18181b", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px", fontFamily: "var(--sans, 'Plus Jakarta Sans', sans-serif)" }}>
-      
+    <div style={{ backgroundColor: "#18181b", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px 16px", fontFamily: "var(--sans, 'Plus Jakarta Sans', sans-serif)" }}>
+
       {/* Scoped CSS using standard dangerouslySetInnerHTML for SSR/Vercel compatibility */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .pitch-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .pitch-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-        .pitch-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .pitch-table { width: 100%; border-collapse: collapse; border: 2px solid #111827; background: #FFFFFF; font-size: 13px; }
-        .pitch-table th, .pitch-table td { border: 1.5px solid #111827; padding: 10px 14px; text-align: left; color: #111827; }
+        .pitch-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        .pitch-grid-custom-4 { display: grid; grid-template-columns: 1.25fr 0.95fr; gap: 16px; }
+        .pitch-table { width: 100%; border-collapse: collapse; border: 2px solid #111827; background: #FFFFFF; font-size: 12.5px; }
+        .pitch-table th, .pitch-table td { border: 1.5px solid #111827; padding: 8px 12px; text-align: left; color: #111827; }
         .pitch-table th { background: #EFECE6; font-family: var(--mono, monospace); font-weight: 800; font-size: 11px; text-transform: uppercase; }
         @media print {
           body { background: transparent !important; padding: 0 !important; }
@@ -78,19 +112,35 @@ export default function PitchDeckPage() {
       `}} />
 
       {/* Deck Controls Toolbar */}
-      <header className="deck-toolbar-container" style={{ width: "min(1080px, 100%)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#FAF7F0", border: "2px solid #111827", boxShadow: "5px 5px 0 #111827", padding: "12px 20px", marginBottom: "16px" }}>
+      <header className="deck-toolbar-container" style={{ width: "min(1100px, 100%)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "10px", background: "#FAF7F0", border: "2px solid #111827", boxShadow: "5px 5px 0 #111827", padding: "10px 18px", marginBottom: "14px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 900, fontSize: "16px", color: "#111827" }}>
           <Link href="/" style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ color: "#0d9227", fontFamily: "var(--sans)", fontWeight: 900, fontSize: "20px" }}>CashIn</span>
-            <span style={{ fontSize: "13px", color: "#4B5563", fontWeight: 700 }}>SLIDE DECK</span>
+            <span style={{ fontSize: "12px", color: "#4B5563", fontWeight: 800 }}>3-MIN PITCH DECK</span>
           </Link>
-          <span style={{ background: "#111827", color: "#FAF7F0", fontSize: "11px", padding: "2px 8px", fontFamily: "var(--mono, monospace)", fontWeight: 700, borderRadius: "2px" }}>
+          <span style={{ background: "#EA580C", color: "#FFFFFF", fontSize: "11px", padding: "2px 7px", fontFamily: "var(--mono, monospace)", fontWeight: 800, borderRadius: "2px" }}>
+            3 MENIT
+          </span>
+          <span style={{ background: "#111827", color: "#FAF7F0", fontSize: "11px", padding: "2px 7px", fontFamily: "var(--mono, monospace)", fontWeight: 700, borderRadius: "2px" }}>
             BASE SEPOLIA
           </span>
         </div>
 
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <span style={{ fontFamily: "var(--mono, monospace)", fontSize: "13px", fontWeight: 800, color: "#111827", marginRight: "6px" }}>
+        {/* 3-Minute Rehearsal Timer */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#FFFFFF", border: "1.5px solid #111827", padding: "4px 10px", borderRadius: "3px" }}>
+          <span style={{ fontFamily: "var(--mono, monospace)", fontSize: "13px", fontWeight: 900, color: timerSeconds < 30 ? "#DC2626" : timerSeconds < 60 ? "#D97706" : "#111827" }}>
+            ⏱️ {formatTimer(timerSeconds)}
+          </span>
+          <button style={{ ...btnStyle, padding: "3px 8px", fontSize: "11px", background: isTimerRunning ? "#FED7AA" : "#D9F99D" }} onClick={toggleTimer}>
+            {isTimerRunning ? "Pause" : "Start"}
+          </button>
+          <button style={{ ...btnStyle, padding: "3px 8px", fontSize: "11px" }} onClick={resetTimer}>
+            Reset
+          </button>
+        </div>
+
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <span style={{ fontFamily: "var(--mono, monospace)", fontSize: "13px", fontWeight: 800, color: "#111827", marginRight: "4px" }}>
             Slide {currentSlide + 1} / {totalSlides}
           </span>
           <button style={btnStyle} onClick={prevSlide}>
@@ -100,503 +150,321 @@ export default function PitchDeckPage() {
             Next &rarr;
           </button>
           <button style={{ ...btnStyle, background: "#D9F99D" }} onClick={() => window.print()}>
-            🖨️ Cetak / Simpan PDF
+            🖨️ Simpan PDF
           </button>
         </div>
       </header>
 
       {/* Presentation Stage (16:9 Aspect Ratio) */}
-      <main className="deck-stage-container" style={{ width: "min(1080px, 100%)", aspectRatio: "16 / 9", minHeight: "580px", background: "#FCFAF5", border: "3px solid #111827", boxShadow: "12px 12px 0 rgba(0, 0, 0, 0.75)", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        
-        {/* SLIDE 1: COVER */}
+      <main className="deck-stage-container" style={{ width: "min(1100px, 100%)", aspectRatio: "16 / 9", minHeight: "590px", background: "#FCFAF5", border: "3px solid #111827", boxShadow: "12px 12px 0 rgba(0, 0, 0, 0.75)", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+
+        {/* SLIDE 1: COVER & VALUE PROPOSITION */}
         {currentSlide === 0 && (
-          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "36px 44px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
-              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, textTransform: "uppercase", color: "#EA580C", letterSpacing: "0.08em", marginBottom: "8px" }}>
-                ETHEREUM JAKARTA HACKATHON 2026 • RWA PROTOCOL
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#FFEDD5", border: "1.5px solid #EA580C", padding: "4px 10px", marginBottom: "12px" }}>
+                <span style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#C2410C", letterSpacing: "0.06em" }}>
+                  ETHEREUM JAKARTA HACKATHON 2026 • RWA PROTOCOL
+                </span>
               </div>
-              <h1 style={{ fontSize: "clamp(46px, 5.5vw, 68px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: "14px", color: "#0d9227" }}>
+              <h1 style={{ fontSize: "clamp(48px, 5.5vw, 68px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: "12px", color: "#0d9227" }}>
                 CashIn
               </h1>
-              <p style={{ fontSize: "22px", fontWeight: 800, color: "#111827", marginBottom: "16px" }}>
+              <p style={{ fontSize: "22px", fontWeight: 800, color: "#111827", marginBottom: "12px" }}>
                 Cairkan Invoice Freelance Lebih Cepat. <span style={{ background: "#D9F99D", padding: "0 6px" }}>Ubah Piutang Jadi Kas Instan.</span>
               </p>
-              <p style={{ fontSize: "15px", color: "#374151", maxWidth: "720px", lineHeight: 1.55 }}>
-                Platform anjak piutang mikro (RWA Invoice Factoring) berbasis NFT ERC-721 di jaringan Base Sepolia. Memberikan modal kerja instan tanpa utang pinjol.
+              <p style={{ fontSize: "14.5px", color: "#374151", maxWidth: "760px", lineHeight: 1.55 }}>
+                Protokol Micro-Invoice Factoring (RWA) berbasis NFT ERC-721 di Base Sepolia. Memberikan modal kerja instan bagi pekerja lepas tanpa utang pinjol dan bebas risiko faktur ganda perbankan tradisional.
               </p>
             </div>
 
-            <div className="pitch-grid-3" style={{ margin: "16px 0" }}>
+            <div className="pitch-grid-3" style={{ margin: "14px 0" }}>
               <div style={{ ...cardStyle, background: "#D9F99D" }}>
-                <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#166534" }}>TARGET PENGGUNA</div>
+                <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "10.5px", fontWeight: 800, color: "#166534" }}>TARGET PENGGUNA</div>
                 <b style={{ fontSize: "15px", display: "block", marginTop: "4px" }}>Pekerja Lepas & Agensi Digital</b>
+                <p style={{ fontSize: "12px", color: "#14532D", margin: "4px 0 0" }}>Talenta kreatif, dev, & konsultan terhambat cashflow.</p>
               </div>
               <div style={{ ...cardStyle, background: "#D1FAE5" }}>
-                <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#065F46" }}>INSTRUMEN RWA</div>
-                <b style={{ fontSize: "15px", display: "block", marginTop: "4px" }}>NFT ERC-721 + Settlement USDC</b>
+                <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "10.5px", fontWeight: 800, color: "#065F46" }}>INSTRUMEN RWA</div>
+                <b style={{ fontSize: "15px", display: "block", marginTop: "4px" }}>NFT ERC-721 + USDC Settlement</b>
+                <p style={{ fontSize: "12px", color: "#064E3B", margin: "4px 0 0" }}>Hak tagih legal on-chain, likuid & terverifikasi.</p>
               </div>
               <div style={{ ...cardStyle, background: "#DBEAFE" }}>
-                <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#1E40AF" }}>JARINGAN BLOCKCHAIN</div>
+                <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "10.5px", fontWeight: 800, color: "#1E40AF" }}>JARINGAN BLOCKCHAIN</div>
                 <b style={{ fontSize: "15px", display: "block", marginTop: "4px" }}>Base Sepolia (Ethereum L2)</b>
+                <p style={{ fontSize: "12px", color: "#1E3A8A", margin: "4px 0 0" }}>Gas fee &lt; Rp100, ideal untuk tiket invoice mikro.</p>
               </div>
             </div>
 
             <div style={footerStyle}>
               <span>Tim: Syifa Maulida (Product Lead) & Sultan Saladin (Smart Contract)</span>
-              <span>cashin-syifamwldas-projects.vercel.app</span>
+              <span>Slide 1 / 5 (Waktu Target: 0:00 - 0:25)</span>
             </div>
           </div>
         )}
 
         {/* SLIDE 2: THE PROBLEM */}
         {currentSlide === 1 && (
-          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "36px 44px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
-              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
+              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "4px" }}>
                 LATAR BELAKANG MASALAH
               </div>
-              <h2 style={{ fontSize: "32px", fontWeight: 900, letterSpacing: "-0.03em" }}>
+              <h2 style={{ fontSize: "30px", fontWeight: 900, letterSpacing: "-0.03em" }}>
                 Krisis Arus Kas 30–90 Hari <span style={{ background: "#D9F99D", padding: "0 4px" }}>Pekerja Lepas</span>
               </h2>
             </div>
 
             <div className="pitch-grid-2" style={{ margin: "auto 0" }}>
               <div style={{ ...cardStyle, borderLeft: "6px solid #EF4444" }}>
-                <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>⏳ Termin Pembayaran Lama (Net 30-90)</b>
+                <b style={{ fontSize: "15px", display: "block", marginBottom: "5px" }}>⏳ Termin Pembayaran Lama (Net 30–90)</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
-                  Pekerjaan selesai hari ini, namun klien baru membayar 1 hingga 3 bulan kemudian. Arus kas freelancer macet untuk kebutuhan hidup bulanan.
+                  Pekerjaan tuntas hari ini, namun klien korporasi baru membayar 1 hingga 3 bulan kemudian. Arus kas freelancer macet total untuk biaya hidup operasional harian.
                 </p>
               </div>
 
               <div style={{ ...cardStyle, borderLeft: "6px solid #EF4444" }}>
-                <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>🏦 Ditolak Perbankan Konvensional</b>
+                <b style={{ fontSize: "15px", display: "block", marginBottom: "5px" }}>🏦 Ditolak Perbankan Konvensional</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
-                  Bank menolak anjak piutang mikro karena ketiadaan sertifikat agunan fisik tanah/properti dan nominal tiket yang dinilai terlalu kecil.
+                  Bank menolak anjak piutang mikro karena ketiadaan sertifikat agunan tanah/properti dan nominal tiket ($200–$2.000) dinilai terlalu kecil & membebani admin bank.
                 </p>
               </div>
 
               <div style={{ ...cardStyle, borderLeft: "6px solid #EF4444" }}>
-                <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>⚠️ Jeratan Pinjol Berbunga Mencekik</b>
+                <b style={{ fontSize: "15px", display: "block", marginBottom: "5px" }}>⚠️ Terjerat Pinjol Bunga Mencekik</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
-                  Demi menutupi kebutuhan, freelancer terjerat pinjol berbunga 20–30% per bulan yang memperburuk kondisi keuangan.
+                  Demi bertahan hidup menunggu invoice cair, freelancer terpaksa menggunakan pinjol konsumtif berbunga 20–30% per bulan yang memperburuk kondisi keuangan.
                 </p>
               </div>
 
               <div style={{ ...cardStyle, borderLeft: "6px solid #EF4444" }}>
-                <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>🛑 Risiko Faktur Ganda di TradFi</b>
+                <b style={{ fontSize: "15px", display: "block", marginBottom: "5px" }}>🛑 Risiko Faktur Ganda di TradFi</b>
                 <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
-                  Pada perbankan tradisional, risiko terbesar adalah satu faktur difotokopi dan dijual berulang kali ke beberapa pemodal berbeda (double factoring).
+                  Pada factoring tradisional, celah terbesar adalah <i>double financing</i>: satu invoice fisik difotokopi dan dijual berulang kali ke beberapa pemodal berbeda secara curang.
                 </p>
               </div>
             </div>
 
             <div style={footerStyle}>
-              <span>CashIn Pitch Deck</span>
-              <span>Slide 2 / 10</span>
+              <span>CashIn Pitch Deck • Masalah Arus Kas & TradFi Gap</span>
+              <span>Slide 2 / 5 (Waktu Target: 0:25 - 0:55)</span>
             </div>
           </div>
         )}
 
-        {/* SLIDE 3: THE SOLUTION */}
+        {/* SLIDE 3: SOLUTION & HOW IT WORKS + SECURITY */}
         {currentSlide === 2 && (
-          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "36px 44px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
-              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
-                SOLUSI KAMI
+              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "4px" }}>
+                SOLUSI & CARA KERJA PROTOKOL
               </div>
-              <h2 style={{ fontSize: "32px", fontWeight: 900, letterSpacing: "-0.03em" }}>
-                Anjak Piutang On-Chain <span style={{ background: "#D9F99D", padding: "0 4px" }}>Berbasis Real-World Asset</span>
+              <h2 style={{ fontSize: "30px", fontWeight: 900, letterSpacing: "-0.03em" }}>
+                Anjak Piutang On-Chain dengan <span style={{ background: "#D9F99D", padding: "0 4px" }}>Atomic State Guard</span>
               </h2>
             </div>
 
-            <div className="pitch-grid-3" style={{ margin: "auto 0" }}>
-              <div style={cardStyle}>
-                <span style={{ background: "#D9F99D", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>01. TOKENISASI</span>
-                <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>NFT Hak Tagih ERC-721</b>
-                <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
-                  Setiap invoice digital yang disahkan dicetak menjadi token NFT unik di Base Sepolia, mengunci hak klaim pembayaran secara legal on-chain.
-                </p>
-              </div>
+            <div className="pitch-grid-2" style={{ margin: "auto 0", alignItems: "stretch" }}>
+              {/* Kolom Kiri: 3 Langkah Alur */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div style={{ ...cardStyle, padding: "12px 14px", display: "flex", gap: "14px", alignItems: "center" }}>
+                  <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "22px", fontWeight: 900, color: "#EA580C" }}>01</div>
+                  <div>
+                    <b style={{ fontSize: "13.5px" }}>Tokenisasi NFT Hak Tagih (ERC-721)</b>
+                    <p style={{ fontSize: "12px", color: "#4B5563", margin: "2px 0 0" }}>Invoice disahkan klien, dicetak jadi token NFT unik di Base Sepolia (Status: <code>Disetujui</code>).</p>
+                  </div>
+                </div>
 
-              <div style={cardStyle}>
-                <span style={{ background: "#D1FAE5", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>02. LIKUIDITAS</span>
-                <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>Pencairan Instan di Muka</b>
-                <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
-                  Freelancer menjual hak tagih dengan potongan diskon wajar (misal 8%) kepada investor. Dana USDC langsung cair detik itu juga tanpa bunga pinjaman.
-                </p>
-              </div>
+                <div style={{ ...cardStyle, padding: "12px 14px", display: "flex", gap: "14px", alignItems: "center" }}>
+                  <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "22px", fontWeight: 900, color: "#059669" }}>02</div>
+                  <div>
+                    <b style={{ fontSize: "13.5px" }}>Likuiditas Instan di Bursa (Jual Diskon)</b>
+                    <p style={{ fontSize: "12px", color: "#4B5563", margin: "2px 0 0" }}>Dijual dengan diskon wajar (misal 8%). Investor setor USDC, dana detik itu juga cair ke freelancer (<code>Didanai</code>).</p>
+                  </div>
+                </div>
 
-              <div style={cardStyle}>
-                <span style={{ background: "#DBEAFE", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>03. SETTLEMENT</span>
-                <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>Pelunasan Otomatis Klien</b>
-                <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
-                  Saat jatuh tempo, klien membayar 100% langsung ke smart contract yang otomatis meneruskannya ke investor pemegang NFT.
-                </p>
-              </div>
-            </div>
-
-            <div style={footerStyle}>
-              <span>CashIn Pitch Deck</span>
-              <span>Slide 3 / 10</span>
-            </div>
-          </div>
-        )}
-
-        {/* SLIDE 4: HOW IT WORKS */}
-        {currentSlide === 3 && (
-          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
-            <div>
-              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
-                ALUR PRODUK
-              </div>
-              <h2 style={{ fontSize: "32px", fontWeight: 900, letterSpacing: "-0.03em" }}>
-                Alur Transaksi <span style={{ background: "#D9F99D", padding: "0 4px" }}>3 Langkah Sederhana</span>
-              </h2>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "14px", margin: "auto 0" }}>
-              <div style={{ ...cardStyle, display: "flex", gap: "18px", alignItems: "center" }}>
-                <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "26px", fontWeight: 900, color: "#EA580C" }}>01</div>
-                <div>
-                  <b style={{ fontSize: "15px" }}>Freelancer Terbitkan Invoice Menjadi NFT</b>
-                  <p style={{ fontSize: "13px", color: "#4B5563", marginTop: "3px" }}>Memasukkan nominal USDC, alamat klien, dan tenggat waktu. Smart contract mencetak NFT (Status: <code>Draft</code>).</p>
+                <div style={{ ...cardStyle, padding: "12px 14px", display: "flex", gap: "14px", alignItems: "center" }}>
+                  <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "22px", fontWeight: 900, color: "#1E40AF" }}>03</div>
+                  <div>
+                    <b style={{ fontSize: "13.5px" }}>Settlement Otomatis Saat Jatuh Tempo</b>
+                    <p style={{ fontSize: "12px", color: "#4B5563", margin: "2px 0 0" }}>Klien bayar 100% langsung ke kontrak. Dana diteruskan ke investor pemegang NFT (<code>Lunas</code>).</p>
+                  </div>
                 </div>
               </div>
 
-              <div style={{ ...cardStyle, display: "flex", gap: "18px", alignItems: "center" }}>
-                <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "26px", fontWeight: 900, color: "#059669" }}>02</div>
+              {/* Kolom Kanan: Inovasi Atomic Guard */}
+              <div style={{ ...cardStyle, background: "#F0FDF4", borderColor: "#059669", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                 <div>
-                  <b style={{ fontSize: "15px" }}>Klien Sahkan & Investor Danai di Bursa</b>
-                  <p style={{ fontSize: "13px", color: "#4B5563", marginTop: "3px" }}>Klien mengonfirmasi pekerjaan selesai (<code>Disetujui</code>). Tagihan ditawarkan di bursa (<code>Di Bursa</code>). Investor menyetor USDC dan dana seketika cair ke freelancer (<code>Didanai</code>).</p>
-                </div>
-              </div>
-
-              <div style={{ ...cardStyle, display: "flex", gap: "18px", alignItems: "center" }}>
-                <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "26px", fontWeight: 900, color: "#111827" }}>03</div>
-                <div>
-                  <b style={{ fontSize: "15px" }}>Pelunasan Klien Saat Jatuh Tempo</b>
-                  <p style={{ fontSize: "13px", color: "#4B5563", marginTop: "3px" }}>Klien mentransfer pelunasan 100% penuh saat jatuh tempo. Kontrak otomatis menyalurkan dana ke investor pemegang NFT (<code>Lunas</code>).</p>
-                </div>
-              </div>
-            </div>
-
-            <div style={footerStyle}>
-              <span>CashIn Pitch Deck</span>
-              <span>Slide 4 / 10</span>
-            </div>
-          </div>
-        )}
-
-        {/* SLIDE 5: SECURITY */}
-        {currentSlide === 4 && (
-          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
-            <div>
-              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
-                INOVASI KEAMANAN
-              </div>
-              <h2 style={{ fontSize: "32px", fontWeight: 900, letterSpacing: "-0.03em" }}>
-                Proteksi Piutang Ganda: <span style={{ background: "#D9F99D", padding: "0 4px" }}>Atomic State Guard</span>
-              </h2>
-            </div>
-
-            <div className="pitch-grid-2" style={{ margin: "auto 0" }}>
-              <div>
-                <h3 style={{ fontSize: "16px", fontWeight: 800, marginBottom: "8px" }}>State Machine Smart Contract</h3>
-                <p style={{ fontSize: "13.5px", lineHeight: 1.55, color: "#4B5563", marginBottom: "14px" }}>
-                  Fungsi <code>buyInvoice</code> pada smart contract CashIn secara mutlak mewajibkan kondisi status:
-                  <br />
-                  <code style={{ fontFamily: "var(--mono, monospace)", background: "#E5E7EB", padding: "3px 6px", fontSize: "12px", fontWeight: 700, borderRadius: "3px", display: "inline-block", marginTop: "4px" }}>
-                    require(inv.status == InvoiceStatus.Listed)
+                  <div style={{ display: "inline-block", background: "#D1FAE5", border: "1px solid #059669", padding: "2px 8px", fontSize: "10.5px", fontWeight: 800, color: "#065F46", fontFamily: "var(--mono, monospace)", marginBottom: "8px" }}>
+                    🔒 INOVASI KEAMANAN EVM
+                  </div>
+                  <h3 style={{ fontSize: "16px", fontWeight: 900, color: "#065F46", marginBottom: "6px" }}>
+                    100% Anti-Double Financing Guarantee
+                  </h3>
+                  <p style={{ fontSize: "12.5px", color: "#1F2937", lineHeight: 1.5, marginBottom: "10px" }}>
+                    Fungsi <code>buyInvoice</code> pada smart contract CashIn memvalidasi status secara mutlak:
+                  </p>
+                  <code style={{ display: "block", fontFamily: "var(--mono, monospace)", background: "#FFFFFF", border: "1.5px solid #059669", padding: "6px 10px", fontSize: "11.5px", fontWeight: 700, color: "#065F46", borderRadius: "3px", marginBottom: "10px" }}>
+                    require(inv.status == InvoiceStatus.Listed);
                   </code>
-                </p>
-                <div style={{ ...cardStyle, background: "#D1FAE5", borderColor: "#059669" }}>
-                  <b style={{ color: "#065F46", fontSize: "13.5px" }}>✓ Garansi 100% Anti-Double Financing</b>
-                  <p style={{ fontSize: "12.5px", color: "#1F2937", marginTop: "4px" }}>
-                    Begitu investor pertama mendanai, status terkunci ke <code>Financed</code>. Upaya pendanaan ulang otomatis digagalkan (revert) oleh EVM tanpa kehilangan saldo sepeser pun.
+                  <p style={{ fontSize: "12px", color: "#374151", lineHeight: 1.5 }}>
+                    Begitu investor pertama mendanai, status bertransisi atomik ke <code>Financed</code>. Upaya pendanaan ulang seketika di-<b>revert</b> otomatis oleh EVM tanpa celah kelalaian manual TradFi.
+                  </p>
+                </div>
+
+                <div style={{ background: "#FFFFFF", border: "1px solid #111827", padding: "6px 10px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", fontWeight: 800, fontFamily: "var(--mono, monospace)" }}>
+                  <span>Draft</span> &rarr; <span>Disetujui</span> &rarr; <span>Di Bursa</span> &rarr; <span style={{ color: "#059669" }}>Didanai</span> &rarr; <span>Lunas</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={footerStyle}>
+              <span>CashIn Pitch Deck • Alur Transaksi & Proteksi On-Chain</span>
+              <span>Slide 3 / 5 (Waktu Target: 0:55 - 1:45)</span>
+            </div>
+          </div>
+        )}
+
+        {/* SLIDE 4: COMPETITIVE ADVANTAGE & BUSINESS MODEL */}
+        {currentSlide === 3 && (
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "36px 44px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
+            <div>
+              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "4px" }}>
+                KEUNGGULAN KOMPETITIF & MODEL BISNIS
+              </div>
+              <h2 style={{ fontSize: "30px", fontWeight: 900, letterSpacing: "-0.03em" }}>
+                Mengapa CashIn Unggul & <span style={{ background: "#D9F99D", padding: "0 4px" }}>Model Monetisasinya</span>
+              </h2>
+            </div>
+
+            <div className="pitch-grid-custom-4" style={{ margin: "auto 0", alignItems: "stretch" }}>
+              {/* Kolom Kiri: Tabel Komparasi */}
+              <div>
+                <table className="pitch-table">
+                  <thead>
+                    <tr>
+                      <th>Fitur / Parameter</th>
+                      <th>Pinjol / TradFi</th>
+                      <th style={{ background: "#D9F99D" }}>CashIn (RWA Base)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><b>Waktu Pencairan</b></td>
+                      <td>3–14 hari kerja</td>
+                      <td style={{ background: "#F4F9D8" }}><b>Detik itu juga (On-chain)</b></td>
+                    </tr>
+                    <tr>
+                      <td><b>Struktur Finansial</b></td>
+                      <td>Utang bunga majemuk (20-30%)</td>
+                      <td style={{ background: "#F4F9D8" }}><b>Jual diskon (Bukan utang)</b></td>
+                    </tr>
+                    <tr>
+                      <td><b>Agunan Fisik</b></td>
+                      <td>Wajib tanah/akses kontak</td>
+                      <td style={{ background: "#F4F9D8" }}><b>Tanpa agunan (NFT hak tagih)</b></td>
+                    </tr>
+                    <tr>
+                      <td><b>Anti-Double Factoring</b></td>
+                      <td>Verifikasi manual rawan lolos</td>
+                      <td style={{ background: "#F4F9D8" }}><b>Terkunci Kriptografis EVM</b></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Kolom Kanan: Business Model & Market Size */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div style={{ ...cardStyle, background: "#FFFFFF", padding: "12px 14px" }}>
+                  <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "10.5px", fontWeight: 800, color: "#EA580C" }}>MODEL BISNIS PROTOKOL</div>
+                  <b style={{ fontSize: "13.5px", display: "block", marginTop: "3px" }}>Fee Transaksi Berkelanjutan</b>
+                  <p style={{ fontSize: "12px", color: "#4B5563", margin: "3px 0 0", lineHeight: 1.45 }}>
+                    • <b>0.5% – 1%</b> fee pencairan dipotong otomatis saat invoice didanai.<br />
+                    • <b>0.25%</b> fee administrasi saat settlement pelunasan klien.
+                  </p>
+                </div>
+
+                <div style={{ ...cardStyle, background: "#D9F99D", padding: "12px 14px" }}>
+                  <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "10.5px", fontWeight: 800, color: "#166534" }}>PELUANG PASAR MASIF</div>
+                  <b style={{ fontSize: "13.5px", display: "block", marginTop: "3px" }}>140M+ Pekerja Gig & $16T RWA</b>
+                  <p style={{ fontSize: "12px", color: "#14532D", margin: "3px 0 0", lineHeight: 1.45 }}>
+                    Pasar gig ASEAN terus membesar. Gas fee &lt; $0.001 di Base memungkinkan pembiayaan invoice bernilai mikro ($100–$2.000).
                   </p>
                 </div>
               </div>
-
-              <table className="pitch-table">
-                <thead>
-                  <tr>
-                    <th>Status Kontrak</th>
-                    <th>Aksi Diizinkan</th>
-                    <th>Proteksi EVM</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><b>Draft</b></td>
-                    <td>Verifikasi Klien</td>
-                    <td>Tidak bisa dibeli</td>
-                  </tr>
-                  <tr>
-                    <td><b>Disetujui</b></td>
-                    <td>Pasang Diskon</td>
-                    <td>Siap ke bursa</td>
-                  </tr>
-                  <tr>
-                    <td><b>Di Bursa</b></td>
-                    <td>Didanai Investor</td>
-                    <td>Menerima USDC</td>
-                  </tr>
-                  <tr style={{ background: "#FEE2E2" }}>
-                    <td><b>Didanai</b></td>
-                    <td>Pelunasan Klien</td>
-                    <td><b>Tolak pembelian ke-2</b></td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
 
             <div style={footerStyle}>
-              <span>CashIn Pitch Deck</span>
-              <span>Slide 5 / 10</span>
+              <span>CashIn Pitch Deck • Keunggulan Kompetitif & Unit Economics</span>
+              <span>Slide 4 / 5 (Waktu Target: 1:45 - 2:25)</span>
             </div>
           </div>
         )}
 
-        {/* SLIDE 6: MARKET */}
-        {currentSlide === 5 && (
-          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
+        {/* SLIDE 5: TRACTION, TEAM & ROADMAP */}
+        {currentSlide === 4 && (
+          <div style={{ display: "flex", width: "100%", height: "100%", padding: "36px 44px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
             <div>
-              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
-                POTENSI PASAR
+              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "4px" }}>
+                TRAKSI, TIM & PETA JALAN
               </div>
-              <h2 style={{ fontSize: "32px", fontWeight: 900, letterSpacing: "-0.03em" }}>
-                Peluang Pasar <span style={{ background: "#D9F99D", padding: "0 4px" }}>Gig Economy & RWA Asia Tenggara</span>
+              <h2 style={{ fontSize: "30px", fontWeight: 900, letterSpacing: "-0.03em" }}>
+                Live di Base Sepolia & <span style={{ background: "#D9F99D", padding: "0 4px" }}>Siap Melangkah Maju</span>
               </h2>
             </div>
 
-            <div className="pitch-grid-3" style={{ margin: "auto 0" }}>
-              <div style={cardStyle}>
-                <div style={{ fontSize: "32px", fontWeight: 900, color: "#EA580C", fontFamily: "var(--mono, monospace)" }}>140M+</div>
-                <b style={{ fontSize: "15px", display: "block", marginTop: "4px", marginBottom: "6px" }}>Pekerja Informal & Gig ASEAN</b>
-                <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
-                  Indonesia memiliki puluhan juta pekerja digital lepas, agensi desain, software house, dan konsultan yang terkendala siklus termin piutang.
-                </p>
-              </div>
-
-              <div style={cardStyle}>
-                <div style={{ fontSize: "32px", fontWeight: 900, color: "#059669", fontFamily: "var(--mono, monospace)" }}>$16T</div>
-                <b style={{ fontSize: "15px", display: "block", marginTop: "4px", marginBottom: "6px" }}>Proyeksi Pasar RWA 2030</b>
-                <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
-                  Sektor tokenisasi aset dunia nyata (RWA Private Credit) bertumbuh pesat karena investor Web3 mencari imbal hasil nyata dan stabil.
-                </p>
-              </div>
-
-              <div style={cardStyle}>
-                <div style={{ fontSize: "32px", fontWeight: 900, color: "#111827", fontFamily: "var(--mono, monospace)" }}>&lt; $0.001</div>
-                <b style={{ fontSize: "15px", display: "block", marginTop: "4px", marginBottom: "6px" }}>Gas Fee Sangat Murah di Base</b>
-                <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
-                  Biaya transaksi di Base L2 memungkinkan pembiayaan invoice bernilai mikro ($200 – $2.000) tanpa terbebani biaya gas Ethereum mainnet.
-                </p>
-              </div>
-            </div>
-
-            <div style={footerStyle}>
-              <span>CashIn Pitch Deck</span>
-              <span>Slide 6 / 10</span>
-            </div>
-          </div>
-        )}
-
-        {/* SLIDE 7: BUSINESS MODEL */}
-        {currentSlide === 6 && (
-          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
-            <div>
-              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
-                MODEL BISNIS
-              </div>
-              <h2 style={{ fontSize: "32px", fontWeight: 900, letterSpacing: "-0.03em" }}>
-                Pendapatan Protokol <span style={{ background: "#D9F99D", padding: "0 4px" }}>yang Berkelanjutan</span>
-              </h2>
-            </div>
-
-            <div className="pitch-grid-3" style={{ margin: "auto 0" }}>
-              <div style={cardStyle}>
-                <span style={{ background: "#D9F99D", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>ALIRAN 1</span>
-                <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>Biaya Pencairan (0.5% – 1%)</b>
-                <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
-                  Dipotong otomatis dari nilai pencairan invoice saat transaksi pendanaan sukses dieksekusi di smart contract.
-                </p>
-              </div>
-
-              <div style={cardStyle}>
-                <span style={{ background: "#D1FAE5", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>ALIRAN 2</span>
-                <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>Biaya Pelunasan (0.25%)</b>
-                <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
-                  Biaya administrasi protokol saat klien melunasi tagihan saat tanggal jatuh tempo kontrak.
-                </p>
-              </div>
-
-              <div style={cardStyle}>
-                <span style={{ background: "#DBEAFE", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>ALIRAN 3</span>
-                <b style={{ fontSize: "15px", display: "block", marginBottom: "6px" }}>Kemitraan Platform Gig</b>
-                <p style={{ fontSize: "13px", color: "#4B5563", lineHeight: 1.5 }}>
-                  Integrasi API dengan platform freelance lokal untuk auto-verifikasi deliverables dan bagi hasil komisi.
-                </p>
-              </div>
-            </div>
-
-            <div style={footerStyle}>
-              <span>CashIn Pitch Deck</span>
-              <span>Slide 7 / 10</span>
-            </div>
-          </div>
-        )}
-
-        {/* SLIDE 8: COMPETITIVE ADVANTAGE */}
-        {currentSlide === 7 && (
-          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
-            <div>
-              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
-                KEUNGGULAN KOMPETITIF
-              </div>
-              <h2 style={{ fontSize: "32px", fontWeight: 900, letterSpacing: "-0.03em" }}>
-                Mengapa CashIn <span style={{ background: "#D9F99D", padding: "0 4px" }}>Jauh Lebih Unggul?</span>
-              </h2>
-            </div>
-
-            <div style={{ margin: "auto 0" }}>
-              <table className="pitch-table">
-                <thead>
-                  <tr>
-                    <th>Fitur / Parameter</th>
-                    <th>P2P / Factoring Konvensional</th>
-                    <th>Pinjol Konsumtif</th>
-                    <th style={{ background: "#D9F99D" }}>CashIn (RWA Base)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><b>Waktu Pencairan</b></td>
-                    <td>3 – 14 hari kerja (verifikasi manual)</td>
-                    <td>1 hari</td>
-                    <td style={{ background: "#F4F9D8" }}><b>Detik itu juga (On-chain)</b></td>
-                  </tr>
-                  <tr>
-                    <td><b>Struktur Finansial</b></td>
-                    <td>Utang berbunga majemuk</td>
-                    <td>Bunga tinggi (20–30%/bln)</td>
-                    <td style={{ background: "#F4F9D8" }}><b>Bukan utang (Jual diskon wajar 5-10%)</b></td>
-                  </tr>
-                  <tr>
-                    <td><b>Persyaratan Agunan</b></td>
-                    <td>Sertifikat tanah / aset fisik</td>
-                    <td>Akses kontak & data pribadi</td>
-                    <td style={{ background: "#F4F9D8" }}><b>Tanpa agunan (NFT hak tagih sah)</b></td>
-                  </tr>
-                  <tr>
-                    <td><b>Proteksi Piutang Ganda</b></td>
-                    <td>Pengecekan manual rawan lolos</td>
-                    <td>Tidak relevan</td>
-                    <td style={{ background: "#F4F9D8" }}><b>Terkunci kriptografis ERC-721</b></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div style={footerStyle}>
-              <span>CashIn Pitch Deck</span>
-              <span>Slide 8 / 10</span>
-            </div>
-          </div>
-        )}
-
-        {/* SLIDE 9: TECH STACK */}
-        {currentSlide === 8 && (
-          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
-            <div>
-              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
-                ARSITEKTUR TEKNOLOGI
-              </div>
-              <h2 style={{ fontSize: "32px", fontWeight: 900, letterSpacing: "-0.03em" }}>
-                Teknologi Modern & <span style={{ background: "#D9F99D", padding: "0 4px" }}>Infrastruktur Teruji</span>
-              </h2>
-            </div>
-
-            <div className="pitch-grid-3" style={{ margin: "auto 0" }}>
-              <div style={cardStyle}>
-                <b style={{ fontSize: "15px", display: "block", marginBottom: "8px" }}>⛓️ Smart Contracts</b>
-                <ul style={{ fontSize: "12.5px", lineHeight: 1.6, color: "#4B5563", paddingLeft: "16px", margin: 0 }}>
-                  <li>Solidity 0.8.28</li>
-                  <li>OpenZeppelin ERC-721 & ERC-20</li>
-                  <li>Hardhat 3 Tooling + TypeChain</li>
-                  <li>100% Automated Test Passing</li>
-                </ul>
-              </div>
-
-              <div style={cardStyle}>
-                <b style={{ fontSize: "15px", display: "block", marginBottom: "8px" }}>🌐 Live di Base Sepolia</b>
-                <ul style={{ fontSize: "12.5px", lineHeight: 1.6, color: "#4B5563", paddingLeft: "16px", margin: 0 }}>
-                  <li>CairIn: <code>0xf436e...357a</code></li>
-                  <li>MockUSDC: <code>0x7715C...76DD</code></li>
-                  <li>Gas fee mikro (&lt; Rp100)</li>
-                  <li>Settlement USDC Stablecoin</li>
-                </ul>
-              </div>
-
-              <div style={cardStyle}>
-                <b style={{ fontSize: "15px", display: "block", marginBottom: "8px" }}>💻 Frontend & Deployment</b>
-                <ul style={{ fontSize: "12.5px", lineHeight: 1.6, color: "#4B5563", paddingLeft: "16px", margin: 0 }}>
-                  <li>Next.js 16 (App Router) & React 19</li>
-                  <li>Wagmi v2 & Viem Web3 Connect</li>
-                  <li>Production Live di Vercel</li>
-                  <li>UI Modern Light Mode</li>
-                </ul>
-              </div>
-            </div>
-
-            <div style={footerStyle}>
-              <span>CashIn Pitch Deck</span>
-              <span>Slide 9 / 10</span>
-            </div>
-          </div>
-        )}
-
-        {/* SLIDE 10: TEAM & ROADMAP */}
-        {currentSlide === 9 && (
-          <div style={{ display: "flex", width: "100%", height: "100%", padding: "40px 48px", flexDirection: "column", justifyContent: "space-between", color: "#111827", background: "#FCFAF5" }}>
-            <div>
-              <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "11px", fontWeight: 800, color: "#EA580C", marginBottom: "6px" }}>
-                TIM & PETA JALAN
-              </div>
-              <h2 style={{ fontSize: "32px", fontWeight: 900, letterSpacing: "-0.03em" }}>
-                Tim Pengembang & <span style={{ background: "#D9F99D", padding: "0 4px" }}>Rencana Eksekusi</span>
-              </h2>
-            </div>
-
-            <div className="pitch-grid-2" style={{ margin: "auto 0" }}>
-              <div style={cardStyle}>
-                <span style={{ background: "#D9F99D", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>TIM PEMBANGUN</span>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
-                  <div>
-                    <b style={{ fontSize: "14px", display: "block" }}>Syifa Maulida</b>
-                    <p style={{ fontSize: "12px", color: "#4B5563", margin: "2px 0 0" }}>Product Lead & Frontend Developer — Arsitektur dApp, Web3 UX, dan desain produk.</p>
+            <div className="pitch-grid-2" style={{ margin: "auto 0", alignItems: "stretch" }}>
+              {/* Kolom Kiri: Live Contracts & Tech Stack */}
+              <div style={{ ...cardStyle, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#D1FAE5", border: "1px solid #059669", padding: "2px 8px", fontSize: "10.5px", fontWeight: 800, color: "#065F46", fontFamily: "var(--mono, monospace)", marginBottom: "8px" }}>
+                    🟢 LIVE DEPLOYED ON BASE SEPOLIA
                   </div>
-                  <div>
-                    <b style={{ fontSize: "14px", display: "block" }}>Sultan Saladin Pahlevi</b>
-                    <p style={{ fontSize: "12px", color: "#4B5563", margin: "2px 0 0" }}>Smart Contract & Full-Stack Engineer — Kontrak Solidity, keamanan on-chain, dan integrasi protokol.</p>
+                  <div style={{ fontSize: "12px", color: "#1F2937", lineHeight: 1.6, marginBottom: "8px" }}>
+                    <div>• <b>CairIn Protocol:</b> <code style={{ fontFamily: "var(--mono, monospace)", background: "#F3F4F6", padding: "1px 4px" }}>0xf436e...357a</code></div>
+                    <div>• <b>MockUSDC Token:</b> <code style={{ fontFamily: "var(--mono, monospace)", background: "#F3F4F6", padding: "1px 4px" }}>0x7715C...76DD</code></div>
+                  </div>
+                </div>
+
+                <div style={{ background: "#F9FAFB", border: "1.5px solid #111827", padding: "10px 12px" }}>
+                  <b style={{ fontSize: "12.5px", display: "block", marginBottom: "4px" }}>🛠️ Modern Web3 Tech Stack</b>
+                  <div style={{ fontSize: "11.5px", color: "#4B5563", lineHeight: 1.5 }}>
+                    Solidity 0.8.28 • OpenZeppelin ERC-721/20 • Hardhat 3 Tooling • Next.js 16 (App Router) • Wagmi v2 & Viem • Production Live di Vercel.
                   </div>
                 </div>
               </div>
 
-              <div style={cardStyle}>
-                <span style={{ background: "#D1FAE5", fontSize: "10px", fontWeight: 800, padding: "3px 8px", border: "1px solid #111827", display: "inline-block", marginBottom: "8px" }}>ROADMAP</span>
-                <div style={{ fontSize: "12px", color: "#4B5563", lineHeight: 1.6, marginTop: "4px" }}>
-                  • <b>Q4 2026:</b> Hackathon MVP & Validasi Smart Contract Base Sepolia.<br />
-                  • <b>Q1 2027:</b> Account Abstraction (ERC-4337) login email/Google & Paymaster.<br />
-                  • <b>Q2 2027:</b> Audit keamanan eksternal & peluncuran Base Mainnet.<br />
-                  • <b>Q3 2027:</b> On-ramp IDR langsung ke USDC & integrasi platform freelance.
+              {/* Kolom Kanan: Tim & Roadmap */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div style={{ ...cardStyle, padding: "12px 14px" }}>
+                  <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "10.5px", fontWeight: 800, color: "#EA580C" }}>TIM PENGEMBANG</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "4px" }}>
+                    <div>
+                      <b style={{ fontSize: "13px" }}>Syifa Maulida</b>
+                      <span style={{ fontSize: "11.5px", color: "#4B5563" }}> — Product Lead & Frontend Developer (Web3 UX & Product Design)</span>
+                    </div>
+                    <div>
+                      <b style={{ fontSize: "13px" }}>Sultan Saladin Pahlevi</b>
+                      <span style={{ fontSize: "11.5px", color: "#4B5563" }}> — Smart Contract & Protocol Engineer (Solidity & EVM Security)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ ...cardStyle, background: "#FAF7F0", padding: "12px 14px" }}>
+                  <div style={{ fontFamily: "var(--mono, monospace)", fontSize: "10.5px", fontWeight: 800, color: "#1E40AF" }}>PETA JALAN EKSEKUSI</div>
+                  <div style={{ fontSize: "11.5px", color: "#374151", lineHeight: 1.55, marginTop: "4px" }}>
+                    • <b>Q4 2026:</b> Hackathon MVP & Validasi Smart Contract Base Sepolia.<br />
+                    • <b>Q1 2027:</b> Account Abstraction (ERC-4337) login email/Google & Gasless.<br />
+                    • <b>Q2 2027:</b> Audit keamanan eksternal & peluncuran Base Mainnet.<br />
+                    • <b>Q3 2027:</b> On-ramp IDR langsung ke USDC & integrasi platform gig lokal.
+                  </div>
                 </div>
               </div>
             </div>
 
             <div style={footerStyle}>
-              <span>CashIn — Build The Real World Onchain</span>
-              <span>Terima Kasih! • cashin-syifamwldas-projects.vercel.app</span>
+              <span>CashIn — Build The Real World Onchain • Terima Kasih!</span>
+              <span>Slide 5 / 5 (Waktu Target: 2:25 - 3:00)</span>
             </div>
           </div>
         )}

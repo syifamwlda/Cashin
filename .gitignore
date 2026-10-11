@@ -29,3 +29,7 @@
 
 # Snapshot cheatcodes output
 /snapshots
+
+# Local hackathon guide documents (not to be pushed)
+PANDUAN*
+
