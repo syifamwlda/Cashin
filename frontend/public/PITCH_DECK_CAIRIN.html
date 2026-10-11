@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pitch Deck 3 Menit — CashIn (Ethereum Jakarta 2026)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #161614;
+      --paper: #F4F0E6;
+      --paper-card: #FCFAF4;
+      --paper-white: #FFFFFF;
+      --orange: #EA580C;
+      --green: #0D9227;
+      --mint: #D9F99D;
+      --acid: #D9F99D;
+      --border: 2px solid var(--ink);
+      --shadow: 5px 5px 0 var(--ink);
+      --shadow-lg: 10px 10px 0 var(--ink);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #18181b;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    /* Deck Controls Toolbar */
+    .deck-toolbar {
+      width: min(1080px, 100%);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: #FAF7F0;
+      border: var(--border);
+      box-shadow: var(--shadow);
+      padding: 10px 18px;
+      margin-bottom: 12px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-badge {
+      background: var(--ink);
+      color: #FAF7F0;
+      font-size: 11px;
+      padding: 2px 7px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+    }
+
+    .badge-time {
+      background: var(--orange);
+      color: #FFFFFF;
+      font-size: 11px;
+      padding: 2px 7px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-control {
+      padding: 7px 14px;
+      background: var(--paper-white);
+      border: 1.5px solid var(--ink);
+      box-shadow: 2px 2px 0 var(--ink);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .btn-control:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+
+    .btn-control.primary {
+      background: var(--mint);
+    }
+
+    /* Presentation Stage (16:9 Aspect Ratio) */
+    .presentation-stage {
+      width: min(1080px, 100%);
+      aspect-ratio: 16 / 9;
+      min-height: 570px;
+      background: #FCFAF5;
+      border: 3px solid var(--ink);
+      box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.75);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+      padding: 36px 44px;
+      flex-direction: column;
+      justify-content: space-between;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+      position: relative;
+    }
+
+    /* Typography */
+    .slide-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--orange);
+      margin-bottom: 6px;
+    }
+
+    .slide-heading {
+      font-size: clamp(24px, 3.2vw, 34px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+
+    .slide-heading em {
+      font-style: normal;
+      background: var(--mint);
+      padding: 0 4px;
+    }
+
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin: 8px 0;
+    }
+
+    /* Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .grid-custom-4 {
+      display: grid;
+      grid-template-columns: 1.25fr 0.95fr;
+      gap: 16px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--paper-white);
+      border: var(--border);
+      box-shadow: 4px 4px 0 var(--ink);
+      padding: 16px 18px;
+    }
+
+    .card-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      margin-bottom: 4px;
+      color: var(--ink);
+    }
+
+    .badge-pill {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border: 1px solid var(--ink);
+      margin-bottom: 6px;
+    }
+
+    /* Tables */
+    .pitch-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: var(--border);
+      background: #FFFFFF;
+      font-size: 12.5px;
+    }
+
+    .pitch-table th, .pitch-table td {
+      border: 1.5px solid var(--ink);
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    .pitch-table th {
+      background: #EFECE6;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    /* Slide Footer */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1.5px dashed rgba(22, 22, 20, 0.25);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #555;
+    }
+
+    @media print {
+      body { background: transparent !important; padding: 0 !important; }
+      .deck-toolbar { display: none !important; }
+      .presentation-stage { border: none !important; box-shadow: none !important; width: 100% !important; height: auto !important; }
+      .slide { position: relative !important; display: flex !important; opacity: 1 !important; page-break-after: always; height: 100vh !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Controls Toolbar -->
+  <header class="deck-toolbar">
+    <div class="brand-title">
+      <span style="color: var(--green); font-size: 20px; font-weight: 900;">CashIn</span>
+    </div>
+
+    <div class="toolbar-actions">
+      <span id="slideIndicator" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 800; margin-right: 4px;">
+        Slide 1 / 5
+      </span>
+      <button class="btn-control" onclick="prevSlide()">&larr; Balik</button>
+      <button class="btn-control primary" onclick="nextSlide()">Lanjut &rarr;</button>
+      <button class="btn-control" style="background: #D9F99D;" onclick="window.print()">🖨️ Cetak PDF</button>
+    </div>
+  </header>
+
+  <!-- Presentation Stage (16:9 Aspect Ratio) -->
+  <main class="presentation-stage">
+
+    <!-- SLIDE 1: COVER -->
+    <section class="slide active">
+      <div>
+        <div style="display: inline-flex; align-items: center; gap: 6px; background: #FFEDD5; border: 1.5px solid var(--orange); padding: 3px 9px; margin-bottom: 8px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; color: #C2410C;">
+            ETHEREUM JAKARTA HACKATHON 2026 • SOLUSI KEUANGAN FREELANCER
+          </span>
+        </div>
+        <h1 style="font-size: clamp(44px, 5vw, 62px); font-weight: 900; letter-spacing: -0.04em; line-height: 1; margin-bottom: 10px; color: var(--green);">
+          CashIn
+        </h1>
+        <p style="font-size: 21px; font-weight: 800; color: var(--ink); margin-bottom: 8px;">
+          Kerjaan Sudah Selesai? <span style="background: var(--mint); padding: 0 6px;">Duitnya Cair Hari Ini Juga.</span>
+        </p>
+        <p style="font-size: 14.5px; color: #374151; max-width: 780px; line-height: 1.5;">
+          Platform pencairan tagihan instan untuk pekerja lepas dan agensi kreatif. Gak perlu nunggu berbulan-bulan, gak perlu berutang ke pinjol, dan 100% aman dari nota bodong.
+        </p>
+      </div>
+
+      <div class="grid-3 slide-body">
+        <div class="card" style="background: var(--mint); padding: 14px 16px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; color: #166534;">UNTUK SIAPA?</div>
+          <b style="font-size: 14.5px; display: block; margin-top: 4px;">Pekerja Lepas & Agensi</b>
+          <p style="font-size: 12px; color: #14532D; margin-top: 4px; line-height: 1.4;">Desainer, programmer, & agensi yang sering macet uang kas operasionalnya.</p>
+        </div>
+
+        <div class="card" style="background: #D1FAE5; padding: 14px 16px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; color: #065F46;">CARANYA GIMANA?</div>
+          <b style="font-size: 14.5px; display: block; margin-top: 4px;">Tagihan Jadi Uang Kas</b>
+          <p style="font-size: 12px; color: #064E3B; margin-top: 4px; line-height: 1.4;">Nota tagihan dikunci di sistem, dana langsung cair dalam hitungan detik.</p>
+        </div>
+
+        <div class="card" style="background: #DBEAFE; padding: 14px 16px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; color: #1E40AF;">KENAPA AMAN & MURAH?</div>
+          <b style="font-size: 14.5px; display: block; margin-top: 4px;">Jaringan Base Sepolia</b>
+          <p style="font-size: 12px; color: #1E3A8A; margin-top: 4px; line-height: 1.4;">Biaya transaksi super irit (&lt; Rp100), cocok untuk tagihan berapa pun nominalnya.</p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Tim: Syifa Maulida (Desain & Produk) & Sultan Saladin (Sistem & Keamanan)</span>
+        <span>Slide 1 / 5 • Target Waktu: 25 Detik</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: MASALAH -->
+    <section class="slide">
+      <div>
+        <div class="slide-eyebrow">MASALAH NYATA DI LAPANGAN</div>
+        <h2 class="slide-heading">Kenapa Banyak Freelancer <em>Terjepit Keuangan?</em></h2>
+      </div>
+
+      <div class="grid-2 slide-body">
+        <div class="card" style="border-left: 6px solid #EF4444;">
+          <b style="font-size: 14.5px; display: block; margin-bottom: 4px;">⏳ Kerja Hari Ini, Baru Dibayar 1–3 Bulan Lagi</b>
+          <p style="font-size: 12.5px; color: #4B5563; line-height: 1.5;">
+            Klien perusahaan sering punya aturan bayar tempo 30 sampai 90 hari. Padahal freelancer butuh makan, bayar kos, dan biaya operasional setiap hari.
+          </p>
+        </div>
+
+        <div class="card" style="border-left: 6px solid #EF4444;">
+          <b style="font-size: 14.5px; display: block; margin-bottom: 4px;">🏦 Mau Pinjam ke Bank? Pasti Ditolak!</b>
+          <p style="font-size: 12.5px; color: #4B5563; line-height: 1.5;">
+            Bank selalu minta jaminan sertifikat tanah atau rumah. Tagihan freelancer bernilai 5–20 juta rupiah dinilai terlalu receh dan bikin repot pihak bank.
+          </p>
+        </div>
+
+        <div class="card" style="border-left: 6px solid #EF4444;">
+          <b style="font-size: 14.5px; display: block; margin-bottom: 4px;">⚠️ Terpaksa Lari ke Pinjol Bunga Mencekik</b>
+          <p style="font-size: 12.5px; color: #4B5563; line-height: 1.5;">
+            Karena kepepet nunggu honor cair, banyak yang nekat pakai pinjol berbunga 20–30% per bulan. Bukannya untung, malah gali lubang tutup lubang.
+          </p>
+        </div>
+
+        <div class="card" style="border-left: 6px solid #EF4444;">
+          <b style="font-size: 14.5px; display: block; margin-bottom: 4px;">🛑 Sistem Manual Rawan Nota Tagihan Palsu</b>
+          <p style="font-size: 12.5px; color: #4B5563; line-height: 1.5;">
+            Di perbankan konvensional, ada oknum yang memfotokopi 1 nota kertas lalu menjualnya berkali-kali ke beberapa pemodal berbeda (faktur bodong).
+          </p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>CashIn • Solusi Masalah Arus Kas Freelancer</span>
+        <span>Slide 2 / 5 • Target Waktu: 30 Detik</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: SOLUSI & CARA KERJA -->
+    <section class="slide">
+      <div>
+        <div class="slide-eyebrow">SOLUSI KAMI</div>
+        <h2 class="slide-heading">3 Langkah Mudah: <em>Ubah Tagihan Jadi Kas Tunai</em></h2>
+      </div>
+
+      <div class="grid-2 slide-body" style="align-items: stretch;">
+        <!-- Kolom Kiri: 3 Langkah -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="card" style="padding: 12px 14px; display: flex; gap: 12px; align-items: center;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 900; color: var(--orange);">01</div>
+            <div>
+              <b style="font-size: 13.5px;">Upload & Kunci Bukti Tagihan</b>
+              <p style="font-size: 12px; color: #4B5563; margin-top: 2px;">Freelancer upload tagihan yang disetujui klien. Sistem membuat bukti digital resmi yang anti-palsu.</p>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 12px 14px; display: flex; gap: 12px; align-items: center;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 900; color: #059669;">02</div>
+            <div>
+              <b style="font-size: 13.5px;">Uang Cair Detik Itu Juga</b>
+              <p style="font-size: 12px; color: #4B5563; margin-top: 2px;">Tagihan dijual dengan potongan wajar (misal diskon 8%). Pemodal mendanai, kas langsung cair detik itu juga.</p>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 12px 14px; display: flex; gap: 12px; align-items: center;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 900; color: #1E40AF;">03</div>
+            <div>
+              <b style="font-size: 13.5px;">Klien Melunasi Pas Jatuh Tempo</b>
+              <p style="font-size: 12px; color: #4B5563; margin-top: 2px;">Saat jatuh tempo (misal 30 hari lagi), klien bayar 100% ke sistem, dan dana otomatis masuk ke pemodal.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kolom Kanan: Keamanan -->
+        <div class="card" style="background: #F0FDF4; border-color: #059669; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div class="badge-pill" style="background: #D1FAE5; color: #065F46; border-color: #059669;">
+              🔒 SISTEM ANTI-TIPU OTOMATIS
+            </div>
+            <h3 style="font-size: 15.5px; font-weight: 900; color: #065F46; margin-bottom: 6px;">
+              1 Tagihan Hanya Bisa Dicairkan 1 Kali!
+            </h3>
+            <p style="font-size: 12.5px; color: #1F2937; line-height: 1.5; margin-bottom: 8px;">
+              Di bank biasa, petugas manusia bisa lalai mengecek nota ganda. Di CashIn, sistem smart contract mengunci status secara otomatis:
+            </p>
+            <div style="background: #FFFFFF; border: 1.5px solid #059669; padding: 8px 10px; margin-bottom: 8px;">
+              <b style="color: #065F46; font-size: 12px; display: block;">🛡️ Garansi Anti-Faktur Bodong:</b>
+              <span style="font-size: 11.5px; color: #374151;">Begitu sudah ada pemodal yang mencairkan, sistem seketika <b>menolak</b> upaya pencairan kedua. Tidak bisa dimanipulasi siapa pun!</span>
+            </div>
+            <p style="font-size: 11.5px; color: #4B5563; line-height: 1.4;">
+              Semua transaksi tercatat transparan di blockchain Base. Bebas dari risiko penipuan manual.
+            </p>
+          </div>
+
+          <div style="background: #FFFFFF; border: 1px solid var(--ink); padding: 5px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; font-weight: 800; font-family: 'JetBrains Mono', monospace;">
+            <span>Dibuat</span> &rarr; <span>Disetujui</span> &rarr; <span>Dipajang</span> &rarr; <span style="color: #059669;">Dicairkan</span> &rarr; <span>Lunas</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>CashIn • Alur Sederhana & Aman untuk Semua</span>
+        <span>Slide 3 / 5 • Target Waktu: 50 Detik</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: KEUNGGULAN & MODEL BISNIS -->
+    <section class="slide">
+      <div>
+        <div class="slide-eyebrow">KEUNGGULAN & MODEL BISNIS</div>
+        <h2 class="slide-heading">Kenapa CashIn Lebih Baik & <em>Dari Mana Kami Untung?</em></h2>
+      </div>
+
+      <div class="grid-custom-4 slide-body" style="align-items: stretch;">
+        <!-- Kolom Kiri: Tabel Perbandingan -->
+        <div>
+          <table class="pitch-table">
+            <thead>
+              <tr>
+                <th>Perbandingan</th>
+                <th>Pinjol / Bank Biasa</th>
+                <th style="background: var(--mint);">CashIn</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>Waktu Cair</b></td>
+                <td>Nunggu 3–14 hari kerja</td>
+                <td style="background: #F4F9D8;"><b>Detik itu juga langsung cair</b></td>
+              </tr>
+              <tr>
+                <td><b>Beban Biaya</b></td>
+                <td>Bunga utang bulanan (20–30%)</td>
+                <td style="background: #F4F9D8;"><b>Bukan utang! Cuma diskon wajar sekali bayar</b></td>
+              </tr>
+              <tr>
+                <td><b>Syarat Jaminan</b></td>
+                <td>Wajib tanah / akses kontak HP</td>
+                <td style="background: #F4F9D8;"><b>Tanpa jaminan (Cukup bukti kerjaan asli)</b></td>
+              </tr>
+              <tr>
+                <td><b>Keamanan</b></td>
+                <td>Rawan nota dipalsukan</td>
+                <td style="background: #F4F9D8;"><b>100% Anti-Palsu via sistem otomatis</b></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Kolom Kanan: Pemasukan & Potensi -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="card" style="padding: 12px 14px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; color: var(--orange);">DARI MANA CASHIN DAPAT UNTUNG?</div>
+            <b style="font-size: 13px; display: block; margin-top: 3px;">Biaya Layanan Sangat Kecil & Jelas</b>
+            <p style="font-size: 12px; color: #4B5563; margin-top: 3px; line-height: 1.45;">
+              • <b>0.5% – 1%</b> dipotong saat uang cair ke freelancer.<br>
+              • <b>0.25%</b> biaya administrasi saat klien melunasi tagihan.<br>
+              <i>Arus kas jelas tanpa membebani siapapun.</i>
+            </p>
+          </div>
+
+          <div class="card" style="background: var(--mint); padding: 12px 14px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; color: #166534;">PASAR SANGAT BESAR</div>
+            <b style="font-size: 13px; display: block; margin-top: 3px;">140 Juta+ Pekerja Gig di ASEAN</b>
+            <p style="font-size: 12px; color: #14532D; margin-top: 3px; line-height: 1.45;">
+              Biaya transaksi di Base super murah (&lt; Rp100), jadi tagihan bernilai 1 sampai 10 juta rupiah tetap sangat masuk akal dicairkan!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>CashIn • Solusi Nyata yang Berkelanjutan</span>
+        <span>Slide 4 / 5 • Target Waktu: 40 Detik</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: LIVE TRAKSI & TIM -->
+    <section class="slide">
+      <div>
+        <div class="slide-eyebrow">BUKTI NYATA & RENCANA</div>
+        <h2 class="slide-heading">Sudah Bisa Dicoba Langsung & <em>Siap Dikembangkan</em></h2>
+      </div>
+
+      <div class="grid-2 slide-body" style="align-items: stretch;">
+        <!-- Kolom Kiri: Status Live -->
+        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div class="badge-pill" style="background: #D1FAE5; color: #065F46; border-color: #059669;">
+              🟢 SUDAH AKTIF DI BASE SEPOLIA TESTNET
+            </div>
+            <b style="font-size: 14px; display: block; margin-bottom: 4px;">Aplikasi Bukan Sekadar Konsep</b>
+            <p style="font-size: 12px; color: #374151; line-height: 1.5; margin-bottom: 8px;">
+              Smart contract CashIn sudah berjalan di blockchain Base. Pencairan dan pelunasan uang digital (USDC) langsung berpindah otomatis tanpa perantara pihak ketiga.
+            </p>
+          </div>
+
+          <div style="background: #F9FAFB; border: 1.5px solid var(--ink); padding: 10px 12px;">
+            <b style="font-size: 12px; display: block; margin-bottom: 3px;">💻 Siap Pakai & Mudah Digunakan</b>
+            <div style="font-size: 11.5px; color: #4B5563; line-height: 1.45;">
+              Website responsif, terhubung langsung ke dompet digital, dan sudah lolos 100% uji coba pengujian sistem.
+            </div>
+          </div>
+        </div>
+
+        <!-- Kolom Kanan: Tim & Roadmap -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="card" style="padding: 12px 14px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; color: var(--orange);">SIAPA DI BALIK CASHIN?</div>
+            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+              <div>
+                <b style="font-size: 13px;">Syifa Maulida</b>
+                <span style="font-size: 11.5px; color: #4B5563;"> — Desain Produk & Tampilan Web (bikin dApp semudah aplikasi perbankan biasa).</span>
+              </div>
+              <div>
+                <b style="font-size: 13px;">Sultan Saladin Pahlevi</b>
+                <span style="font-size: 11.5px; color: #4B5563;"> — Sistem Blockchain & Keamanan (bikin smart contract otomatis & anti-kebobolan).</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="background: #FAF7F0; padding: 12px 14px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; color: #1E40AF;">RENCANA KE DEPAN</div>
+            <div style="font-size: 11.5px; color: #374151; line-height: 1.5; margin-top: 4px;">
+              • <b>Bisa login pakai akun Google/email biasa</b>, jadi freelancer gak perlu pusing bikin dompet kripto.<br>
+              • <b>Bisa langsung cair ke rekening Rupiah (IDR)</b> lewat kerjasama bank/fintech lokal.<br>
+              • Kerjasama langsung dengan platform freelance (Fastwork, Sribulancer, dll).
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>CashIn • Solusi Nyata untuk Freelancer Indonesia • Terima Kasih!</span>
+        <span>Slide 5 / 5 • Target Waktu: 35 Detik</span>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const indicator = document.getElementById('slideIndicator');
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      indicator.textContent = `Slide ${currentSlide + 1} / ${totalSlides}`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    // Keyboard Navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>
